@@ -31,6 +31,7 @@ setup(
             'next_record = factr2_next.data_collection.recorder_node:main',
             'next_train = factr2_next.training.train:main',
             'next_infer = factr2_next.inference.inference_node:main',
+            'next_visualize = factr2_next.visualization.web_node:main',
         ],
     },
 )

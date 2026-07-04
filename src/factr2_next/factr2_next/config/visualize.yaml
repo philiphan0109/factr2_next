@@ -1,0 +1,13 @@
+arm: right
+
+web:
+  port: 8080
+
+plot:
+  max_points: 500
+
+outputs:
+  external_joint_torque: /next/{arm}/external_joint_torque
+  free_joint_torque_pred: /next/{arm}/free_joint_torque_pred
+  mse: /next/{arm}/mse
+  score: /next/{arm}/score
