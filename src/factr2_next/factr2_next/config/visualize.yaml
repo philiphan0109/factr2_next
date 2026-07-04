@@ -1,0 +1,22 @@
+# Topic roots used by NEXT inference and the optional feedback demo.
+next_topic_root: /next/right
+feedback_topic_root: /factr2_feedback/right
+
+web:
+  host: 127.0.0.1
+  port: 8080
+
+plot:
+  max_points: 500
+
+outputs:
+  external_joint_torque: "{next_topic_root}/external_joint_torque"
+  external_joint_torque_raw: "{next_topic_root}/external_joint_torque/raw"
+  free_joint_torque_pred: "{next_topic_root}/free_joint_torque_pred"
+  mse: "{next_topic_root}/mse"
+  normalized_contact_magnitude: "{next_topic_root}/normalized_contact_magnitude"
+  contact_state: "{next_topic_root}/contact_state"
+
+  # Optional: published only when the teacher-arm feedback demo is running.
+  feedback_torque: "{feedback_topic_root}/torque"
+  feedback_gate: "{feedback_topic_root}/gate"

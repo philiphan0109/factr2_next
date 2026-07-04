@@ -1,0 +1,89 @@
+# Piper/Gello teleop demo config.
+# Before running, set each Dynamixel port from:
+#   ls /dev/serial/by-id/
+
+right:
+  gello_base_orientation: [0.7853981634, 0.0, 0.0]
+  calibration_joint_pos: [1.57, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+  dynamixel:
+    port: "usb-FTDI_USB__-__Serial_Converter_RIGHT-if00-port0"
+    joint_signs: [1, -1, -1, 1, -1, 1, 1]
+
+left:
+  gello_base_orientation: [-0.7853981634, 0.0, 0.0]
+  calibration_joint_pos: [-1.57, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+  dynamixel:
+    port: "usb-FTDI_USB__-__Serial_Converter_LEFT-if00-port0"
+    joint_signs: [1, -1, -1, 1, -1, 1, 1]
+
+
+shared:
+  dynamixel:
+    servo_types: [
+      "XC330_T288_T", "XC330_T288_T", "XC330_T288_T", "XC330_T288_T", 
+      "XC330_T288_T", "XC330_T288_T", "XC330_T288_T",
+    ]
+  
+  gripper_teleop:
+    gripper_command_range: 0.5  # maximum range (in rad) of leader gripper trigger
+    actuation_range: 1.0        # follower command max, 0 = fully closed, actuation_range = fully open
+ 
+  arm_teleop:
+    teacher_arm_urdf: "piper_gello.urdf"
+    num_arm_joints: 6
+    arm_joint_limit_safety_margin: 0.1
+    arm_joint_limits_min: [-2.6179, 0.0, -2.967, -1.745, -1.22, -2.09439]
+    arm_joint_limits_max: [2.6179, 3.14, 0.0, 1.745, 1.22, 2.09439]
+    initial_arm_match_pos: [0.0, 0.785398, -0.785398, 0.0, 0.0, 0.0]
+
+  controller:
+    frequency: 500
+
+    gravity_comp:
+      enable: false
+      modifier: [0.5, 0.6, 0.75, 1.0, 0.75, 1.2]
+
+    static_friction_dither:
+      enable: false  # if enabled, ensure gravity compensation is also enabled
+      enable_speed: 0.9
+      modifier: 1.7
+
+    null_space_regulation:
+      enable: true
+      null_space_joint_targets: [0.0, 0.785398, -0.785398, 0.0, 0.0, 0.0]
+      null_space_regulation_modifier: [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+      kp: 0.075
+      kd: 0.01
+
+    joint_limit_barrier_repulsion:
+      kp: 2.0
+      kd: 0.04315069084
+    
+    factr2_torque_feedback:
+      enable: false
+      external_joint_torque_topic: "/next/{arm}/external_joint_torque"
+      contact_state_topic: "/next/{arm}/contact_state"
+      feedback_torque_topic: "/factr2_feedback/{arm}/torque"
+      feedback_gate_topic: "/factr2_feedback/{arm}/gate"
+      gains: [-0.06, -0.08, -0.08, -0.03, -0.03, -0.02]
+      damping_gains: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      max_torque: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+      ramp_alpha: 0.35
+      stale_timeout_seconds: 0.2
+    
+    gripper_feedback:
+      enable: true
+      kp: 0.06
+      kd: 0.01
+      ff_deadband: 0.01
+      kff: 0.03
+      contact_threshold: 0.4
+      contact_gain: 0.03
+      contact_feedback_max_torque: 0.045
+
+    gripper_quantization:
+      lower_threshold: 0.06
+      upper_threshold: 0.94
+      

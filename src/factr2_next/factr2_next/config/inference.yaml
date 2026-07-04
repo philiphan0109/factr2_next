@@ -1,0 +1,78 @@
+# Directory created by next_train. It must contain:
+#   model.pt, config.yaml, normalization.npz
+checkpoint_dir: /path/to/next_run_dir
+
+# Root namespaces. For another robot or arm, these are usually the only topic
+# roots you need to change.
+robot_topic_root: /piper/right
+next_topic_root: /next/right
+
+# Inference device. Use "cpu" for portability, or "cuda" if PyTorch CUDA is installed.
+device: cpu
+
+sync:
+  # ApproximateTimeSynchronizer settings for joint state inputs.
+  queue_size: 20
+  slop_seconds: 0.03
+
+topics:
+  # All inputs are sensor_msgs/JointState. This config uses .position for torque
+  # because the Piper driver publishes observed effort/current in JointState.position.
+  joint_pos:
+    topic: "{robot_topic_root}/joint_pos_obs"
+    type: sensor_msgs/JointState
+    field: position
+
+  joint_vel:
+    topic: "{robot_topic_root}/joint_vel_obs"
+    type: sensor_msgs/JointState
+    field: position
+
+  joint_cmd:
+    topic: "{robot_topic_root}/joint_pos_cmd"
+    type: sensor_msgs/JointState
+    field: position
+
+  measured_joint_torque:
+    topic: "{robot_topic_root}/joint_effort_obs"
+    type: sensor_msgs/JointState
+    field: position
+
+outputs:
+  # Torque vectors are published as sensor_msgs/JointState with values in .position.
+  # external_joint_torque_raw is the direct residual:
+  #   tau_ext_raw = tau_measured - tau_free_pred
+  # external_joint_torque is the smoothed version used for normalized contact
+  # magnitude and contact hysteresis.
+  external_joint_torque: "{next_topic_root}/external_joint_torque"
+  external_joint_torque_raw: "{next_topic_root}/external_joint_torque/raw"
+  free_joint_torque_pred: "{next_topic_root}/free_joint_torque_pred"
+  mse: "{next_topic_root}/mse"
+  normalized_contact_magnitude: "{next_topic_root}/normalized_contact_magnitude"
+  contact_state: "{next_topic_root}/contact_state"
+
+smoothing:
+  # Applied only to external_joint_torque. The raw residual is always published.
+  # mode: none, ema, lowpass
+  enabled: true
+  mode: ema
+  ema_alpha: 0.2
+  cutoff_hz: 5.0
+  sample_hz: 50.0
+
+normalized_contact_magnitude:
+  # Published to {next_topic_root}/normalized_contact_magnitude as
+  # norm(tau_ext) / scale. This scalar is also used by contact hysteresis.
+  # source: filtered_external_joint_torque, raw_external_joint_torque
+  # norm: l1, l2, linf
+  source: filtered_external_joint_torque
+  norm: l1
+  scale: 1.0
+
+contact:
+  # Hysteresis over normalized_contact_magnitude:
+  #   contact turns on  when normalized_contact_magnitude >= high_threshold
+  #   contact turns off when normalized_contact_magnitude <= low_threshold
+  enabled: true
+  low_threshold: 1.0
+  high_threshold: 2.0

@@ -1,0 +1,49 @@
+data:
+  train_h5_paths:
+    - /path/to/free_motion_train.h5
+  val_h5_paths:
+    - /path/to/free_motion_val.h5
+
+  val_episodes: all
+  train_episodes: all
+
+  # Use "single" for H5 files recorded with the default record.yaml.
+  # Use "both" with arm-formatted keys for bimanual datasets.
+  arm_mode: single
+  keys:
+    joint_pos: joint_pos
+    joint_vel: joint_vel
+    joint_cmd: joint_cmd
+    measured_joint_torque: measured_joint_torque
+  history: 50
+
+  # Used only when val_h5_paths is empty.
+  val_fraction: 0.1
+  val_split: contiguous
+  val_buffer_windows: 50
+
+model:
+  type: lstm
+  # Paper Appendix A.1 uses a stateless sliding-window LSTM: the hidden state is
+  # reset for each history window instead of being carried across a full stream.
+  # Stateful streaming is not enabled in this implementation.
+  state_mode: stateless
+  hidden_size: 128
+  num_layers: 2
+  # The original NEXT implementation uses a standard unidirectional LSTM.
+  bidirectional: false
+  head_hidden: 256
+  head_layers: 2
+  dropout: 0.1
+
+train:
+  batch_size: 2048
+  # Good for a quick smoke test; increase for final training.
+  epochs: 20
+  learning_rate: 0.001
+  device: cpu
+  seed: 0
+
+save:
+  output_dir: runs
+  run_name: next_free_torque
