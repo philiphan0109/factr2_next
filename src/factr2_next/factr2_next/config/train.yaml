@@ -16,8 +16,10 @@ model:
   type: lstm
   hidden_size: 128
   num_layers: 2
+  bidirectional: true
   head_hidden: 256
-  dropout: 0.0
+  head_layers: 2
+  dropout: 0.1
 
 train:
   batch_size: 2048

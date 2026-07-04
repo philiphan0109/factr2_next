@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import yaml
 
-from factr2_next.training.models import LSTMRegressor
+from factr2_next.training.models import build_model
 
 
 @dataclass
@@ -26,13 +26,11 @@ def load_checkpoint(run_dir, device="cpu"):
     config = _load_yaml(run_dir / "config.yaml")
     model_cfg = ckpt.get("model", config.get("model", {}))
 
-    model = LSTMRegressor(
+    model = build_model(
+        model_cfg,
         ckpt["input_size"],
         ckpt["output_size"],
-        hidden_size=int(model_cfg.get("hidden_size", 128)),
-        num_layers=int(model_cfg.get("num_layers", 2)),
-        head_hidden=int(model_cfg.get("head_hidden", 256)),
-        dropout=float(model_cfg.get("dropout", 0.0)),
+        ckpt["history"],
     ).to(device)
     model.load_state_dict(ckpt["model_state_dict"])
     model.eval()

@@ -11,7 +11,7 @@ import yaml
 from torch.utils.data import DataLoader, Subset
 
 from factr2_next.training.dataset import NextTorqueDataset
-from factr2_next.training.models import LSTMRegressor
+from factr2_next.training.models import build_model
 
 
 def main():
@@ -43,14 +43,12 @@ def train_arm(cfg, arm):
     if device.type == "cuda" and not torch.cuda.is_available():
         device = torch.device("cpu")
 
-    model_cfg = cfg["model"]
-    model = LSTMRegressor(
+    model_cfg = normalized_model_cfg(cfg["model"])
+    model = build_model(
+        model_cfg,
         dataset.input_size,
         dataset.output_size,
-        hidden_size=int(model_cfg.get("hidden_size", 128)),
-        num_layers=int(model_cfg.get("num_layers", 2)),
-        head_hidden=int(model_cfg.get("head_hidden", 256)),
-        dropout=float(model_cfg.get("dropout", 0.0)),
+        dataset.history,
     ).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=float(cfg["train"].get("learning_rate", 1e-3)))
     batch_size = int(cfg["train"].get("batch_size", 2048))
@@ -67,7 +65,7 @@ def train_arm(cfg, arm):
         print(f"{arm}: epoch {epoch:03d} train={train_loss:.6f} val={val_loss:.6f}")
 
     out_dir = make_run_dir(cfg["save"], arm)
-    save_run(out_dir, model, cfg, norm, metrics, dataset, cfg["model"])
+    save_run(out_dir, model, cfg, norm, metrics, dataset, model_cfg)
     print(f"{arm}: saved {out_dir}")
 
 
@@ -145,6 +143,12 @@ def save_run(out_dir, model, cfg, norm, metrics, dataset, model_cfg):
     np.savez(out_dir / "normalization.npz", **norm)
     with open(out_dir / "metrics.json", "w") as f:
         json.dump(metrics, f, indent=2)
+
+
+def normalized_model_cfg(model_cfg):
+    model_cfg = dict(model_cfg)
+    model_cfg["type"] = str(model_cfg.get("type", "lstm")).lower()
+    return model_cfg
 
 
 def load_yaml(path):
