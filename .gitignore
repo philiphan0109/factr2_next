@@ -1,0 +1,12 @@
+build/
+install/
+log/
+data/
+runs/
+*.pt
+*.npz
+*.h5
+__pycache__/
+*.py[cod]
+.venv/
+.vscode/

@@ -1,0 +1,42 @@
+checkpoint_dir: /home/philip/Projects/factr2_next/src/factr2_next/runs/next_free_torque_right_20260703_225450
+arm: right
+device: cpu
+
+sync:
+  queue_size: 20
+  slop_seconds: 0.03
+
+topics:
+  joint_pos:
+    topic: /piper/{arm}/joint_pos_obs
+    type: sensor_msgs/JointState
+    field: position
+
+  joint_vel:
+    topic: /piper/{arm}/joint_vel_obs
+    type: sensor_msgs/JointState
+    field: position
+
+  joint_cmd:
+    topic: /piper/{arm}/joint_pos_cmd
+    type: sensor_msgs/JointState
+    field: position
+
+  measured_joint_torque:
+    topic: /piper/{arm}/joint_effort_obs
+    type: sensor_msgs/JointState
+    field: position
+
+outputs:
+  # Torque vectors are published as sensor_msgs/JointState with values in .position
+  # to match the current recorder/driver convention.
+  external_joint_torque: /next/{arm}/external_joint_torque
+  free_joint_torque_pred: /next/{arm}/free_joint_torque_pred
+  mse: /next/{arm}/mse
+  score: /next/{arm}/score
+
+# Paper convention:
+# tau_ext_hat = tau_measured - tau_free_hat
+# For this first slice, score publishes the same scalar value as mse.
+next:
+  sign_convention: measured_minus_predicted

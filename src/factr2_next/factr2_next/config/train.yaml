@@ -1,0 +1,36 @@
+data:
+  h5_paths:
+    - /home/philip/Projects/factr2_next/data/free_motion_20260703_220028.h5
+  episodes: all
+  arm_mode: both
+  arms: [left, right]
+  keys:
+    joint_pos: "{arm}_joint_pos"
+    joint_vel: "{arm}_joint_vel"
+    joint_cmd: "{arm}_joint_cmd"
+    measured_joint_torque: "{arm}_measured_joint_torque"
+  history: 50
+  val_fraction: 0.1
+
+model:
+  type: lstm
+  hidden_size: 128
+  num_layers: 2
+  head_hidden: 256
+  dropout: 0.0
+
+train:
+  batch_size: 2048
+  epochs: 20
+  learning_rate: 0.001
+  device: cuda
+  seed: 0
+
+save:
+  output_dir: runs
+  run_name: next_free_torque
+
+# NEXT learns tau_free from free-motion data.
+# During inference: tau_ext_hat = tau_measured - tau_free_hat.
+next:
+  sign_convention: measured_minus_predicted

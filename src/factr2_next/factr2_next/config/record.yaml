@@ -1,0 +1,47 @@
+output_dir: data
+session_name: free_motion
+
+sync:
+  queue_size: 20
+  slop_seconds: 0.03
+
+recording:
+  target_hz: 50.0
+  min_hz: 45.0
+  sample_timeout_seconds: 0.2
+  warn_after_seconds: 2.0
+
+# Synchronized samples are cached, then rows are written by a fixed-rate timer:
+# ep_0000/<key>/data and ep_0000/<key>/timestamps.
+topics:
+  left_joint_pos:
+    topic: /piper/left/joint_pos_obs
+    field: position
+
+  left_joint_vel:
+    topic: /piper/left/joint_vel_obs
+    field: position
+
+  left_joint_cmd:
+    topic: /piper/left/joint_pos_cmd
+    field: position
+
+  left_measured_joint_torque:
+    topic: /piper/left/joint_effort_obs
+    field: position
+
+  right_joint_pos:
+    topic: /piper/right/joint_pos_obs
+    field: position
+
+  right_joint_vel:
+    topic: /piper/right/joint_vel_obs
+    field: position
+
+  right_joint_cmd:
+    topic: /piper/right/joint_pos_cmd
+    field: position
+
+  right_measured_joint_torque:
+    topic: /piper/right/joint_effort_obs
+    field: position

@@ -1,0 +1,24 @@
+from collections import deque
+
+import numpy as np
+
+
+class HistoryBuffer:
+    def __init__(self, history):
+        self.history = int(history)
+        self.rows = deque(maxlen=self.history)
+
+    @property
+    def ready(self):
+        return len(self.rows) == self.history
+
+    def append(self, joint_pos, joint_vel, joint_cmd):
+        joint_pos = np.asarray(joint_pos, dtype=np.float32)
+        joint_vel = np.asarray(joint_vel, dtype=np.float32)
+        joint_cmd = np.asarray(joint_cmd, dtype=np.float32)
+        self.rows.append(np.concatenate([joint_pos, joint_vel, joint_cmd - joint_pos]))
+
+    def array(self):
+        if not self.ready:
+            raise ValueError(f"HistoryBuffer needs {self.history} rows, has {len(self.rows)}.")
+        return np.stack(self.rows).astype(np.float32)
