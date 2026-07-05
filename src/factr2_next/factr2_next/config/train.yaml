@@ -1,6 +1,7 @@
 data:
   h5_paths:
     - /home/philip/Projects/factr2_next/data/free_motion_20260704_012657.h5
+    - /home/philip/Projects/factr2_next/data/free_motion_20260704_125126.h5
   episodes: all
   arm_mode: both
   arms: [left, right]

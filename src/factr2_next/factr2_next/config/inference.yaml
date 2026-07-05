@@ -1,4 +1,4 @@
-checkpoint_dir: /home/philip/Projects/factr2_next/runs/next_free_torque_right_20260704_014921
+checkpoint_dir: /home/philip/Projects/factr2_next/runs/next_free_torque_right_20260704_130129
 arm: right
 device: cpu
 
