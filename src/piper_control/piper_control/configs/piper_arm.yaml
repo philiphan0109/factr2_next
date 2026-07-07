@@ -1,0 +1,22 @@
+shared:
+  publish_hz: 100
+  command_hz: 200
+  read_hz: 200
+  auto_enable: true
+  auto_read: true
+
+right:
+  can_port: can0
+  gripper_exist: true
+  robot_base_pose: [0.0,-0.13, 0.0, 0.7853981634, 0.0, 0.0]
+  modifier: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  home_pos: [0.0, 0.785398, -0.785398, 0.0, 0.0, 0.0]
+  rest_pos: [1.57, 0.15, 0.0, 0.0, 0.3, 0.0]
+
+left:
+  can_port: can1
+  gripper_exist: true 
+  robot_base_pose: [0.0,0.13, 0.0, -0.7853981634, 0.0, 0.0]
+  modifier: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  home_pos: [0.0, 0.785398, -0.785398, 0.0, 0.0, 0.0]
+  rest_pos: [-1.57, 0.15, 0.0, 0.0, 0.3, 0.0]

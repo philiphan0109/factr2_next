@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="piper_gello">
+  <link
+    name="link_0">
+    <inertial>
+      <origin
+        xyz="-0.0385385029074713 0.000154092747451972 -0.00894711206443034"
+        rpy="0 0 0" />
+      <mass
+        value="0.215" />
+      <inertia
+        ixx="8.90046108521354E-05"
+        ixy="1.14753668644881E-06"
+        ixz="-2.5982776174143E-05"
+        iyy="0.000321535384896912"
+        iyz="-2.24357194360803E-07"
+        izz="0.000378474449891945" />
+    </inertial>
+  </link>
+  <link
+    name="link_1">
+    <inertial>
+    <origin
+        xyz="-0.0023 -0.00014000000000000001 0.053270000000000005"
+        rpy="0 0 0" />
+    <mass
+        value="0.036" />
+    <inertia
+        ixx="1.043128e-05"
+        ixy="1.2039999999999999e-08"
+        ixz="-9.1e-08"
+        iyy="1.125891e-05"
+        iyz="3.402e-08"
+        izz="4.78951e-06" />
+    </inertial>
+  </link>
+  <joint
+    name="joint_1"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="link_0" />
+    <child
+      link="link_1" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.6179"
+      upper="2.6179"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="link_2">
+    <inertial>
+    <origin
+        xyz="-0.12418000000000001 0.008490000000000001 0.00106"
+        rpy="0 0 0" />
+    <mass
+        value="0.071" />
+    <inertia
+        ixx="1.8157369999999998e-05"
+        ixy="3.52148e-05"
+        ixz="-2.11876e-06"
+        iyy="0.00025019646"
+        iyz="5.1786e-07"
+        izz="0.00025893679" />
+    </inertial>
+  </link>
+  <joint
+    name="joint_2"
+    type="revolute">
+    <origin
+      xyz="0 0 0.06845"
+      rpy="1.57079632679489 0 0" />
+    <parent
+      link="link_1" />
+    <child
+      link="link_2" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="0.0"
+      upper="3.14"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="link_3">
+    <inertial>
+    <origin
+        xyz="0.04303 0.00725 0.0"
+        rpy="0 0 0" />
+    <mass
+        value="0.034" />
+    <inertia
+        ixx="5.29667e-06"
+        ixy="-7.7729e-07"
+        ixz="-1.38e-09"
+        iyy="1.010427e-05"
+        iyz="-6.3e-10"
+        izz="1.1759930000000001e-05" />
+    </inertial>
+  </link>
+  <joint
+    name="joint_3"
+    type="revolute">
+    <origin
+      xyz="-0.18245484 0.0321699999999999 0"
+      rpy="0 0 0" />
+    <parent
+      link="link_2" />
+    <child
+      link="link_3" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-2.967"
+      upper="0.0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="link_4">
+    <inertial>
+    <origin
+        xyz="-0.00011 -0.01194 0.08386"
+        rpy="0 0 0" />
+    <mass
+        value="0.046" />
+    <inertia
+        ixx="7.588756e-05"
+        ixy="1.778e-08"
+        ixz="1.4279e-07"
+        iyy="7.367333000000001e-05"
+        iyz="-4.12956e-06"
+        izz="6.3348e-06" />
+    </inertial>
+  </link>
+  <joint
+    name="joint_4"
+    type="revolute">
+    <origin
+      xyz="0.0513273011570659 0 0"
+      rpy="0 1.5707963267949 0" />
+    <parent
+      link="link_3" />
+    <child
+      link="link_4" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-1.745"
+      upper="1.745"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="link_5">
+    <inertial>
+    <origin
+        xyz="0.0448 -0.01116 0.0"
+        rpy="0 0 0" />
+    <mass
+        value="0.038" />
+    <inertia
+        ixx="6.3138000000000004e-06"
+        ixy="-2.32185e-06"
+        ixz="2.0800000000000003e-09"
+        iyy="2.2962830000000002e-05"
+        iyz="-2.2e-10"
+        izz="2.488978e-05" />
+    </inertial>
+  </link>
+  <joint
+    name="joint_5"
+    type="revolute">
+    <origin
+      xyz="0 0 0.112284567471866"
+      rpy="3.14159265358979 -1.5707963267949 3.14159265358979" />
+    <parent
+      link="link_4" />
+    <child
+      link="link_5" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-1.22"
+      upper="1.22"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="link_6">
+    <inertial>
+    <origin
+        xyz="-8.999999999999999e-05 -0.05486 0.00062"
+        rpy="0 0 0" />
+    <mass
+        value="0.053" />
+    <inertia
+        ixx="7.829908e-05"
+        ixy="1.1948e-07"
+        ixz="7.01e-08"
+        iyy="2.882171e-05"
+        iyz="-2.814702e-05"
+        izz="5.577268e-05" />
+    </inertial>
+  </link>
+  <joint
+    name="joint_6"
+    type="revolute">
+    <origin
+      xyz="0.05915 0 0"
+      rpy="0 1.5708 0" />
+    <parent
+      link="link_5" />
+    <child
+      link="link_6" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-2.09439"
+      upper="2.09439"
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>

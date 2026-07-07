@@ -31,12 +31,36 @@ outputs:
   # Torque vectors are published as sensor_msgs/JointState with values in .position
   # to match the current recorder/driver convention.
   external_joint_torque: /next/{arm}/external_joint_torque
+  external_joint_torque_raw: /next/{arm}/external_joint_torque/raw
   free_joint_torque_pred: /next/{arm}/free_joint_torque_pred
   mse: /next/{arm}/mse
   score: /next/{arm}/score
+  contact_state: /next/{arm}/contact_state
+
+smoothing:
+  # Applied only to external_joint_torque. The raw signal is always published.
+  # mode: none, ema, lowpass
+  enabled: true
+  mode: ema
+  ema_alpha: 0.2
+  cutoff_hz: 5.0
+  sample_hz: 50.0
+
+score:
+  # Published to /next/{arm}/score as norm(tau_ext) / scale.
+  # source: filtered_external_joint_torque, raw_external_joint_torque
+  # norm: l1, l2, linf
+  source: filtered_external_joint_torque
+  norm: l1
+  scale: 1.0
+
+contact:
+  # Hysteresis over the published score.
+  enabled: true
+  low_threshold: 1.0
+  high_threshold: 2.0
 
 # Paper convention:
 # tau_ext_hat = tau_measured - tau_free_hat
-# For this first slice, score publishes the same scalar value as mse.
 next:
   sign_convention: measured_minus_predicted

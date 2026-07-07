@@ -10,7 +10,8 @@ source .venv/bin/activate
 
 uv pip install pip wheel setuptools==79.0.1
 uv pip install colcon-core colcon-common-extensions
-uv pip install numpy pyyaml termcolor h5py torch cffi
+uv pip install "numpy<2.0" pyyaml termcolor h5py torch cffi scipy
+uv pip install python-can piper-sdk dynamixel-sdk pyserial pynput
 
 which python
 which colcon

@@ -8,6 +8,10 @@ plot:
 
 outputs:
   external_joint_torque: /next/{arm}/external_joint_torque
+  external_joint_torque_raw: /next/{arm}/external_joint_torque/raw
   free_joint_torque_pred: /next/{arm}/free_joint_torque_pred
   mse: /next/{arm}/mse
   score: /next/{arm}/score
+  contact_state: /next/{arm}/contact_state
+  feedback_torque: /factr2_feedback/{arm}/torque
+  feedback_gate: /factr2_feedback/{arm}/gate
