@@ -67,3 +67,12 @@ class NextTorqueDataset(Dataset):
         if episodes == "all":
             return sorted(h5.keys())
         return list(episodes)
+
+
+def list_episode_specs(h5_paths, episodes="all"):
+    specs = []
+    for path in h5_paths:
+        with h5py.File(Path(path), "r") as h5:
+            names = sorted(h5.keys()) if episodes == "all" else list(episodes)
+        specs.extend((path, name) for name in names)
+    return specs

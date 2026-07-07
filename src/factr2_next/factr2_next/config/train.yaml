@@ -1,8 +1,13 @@
 data:
-  h5_paths:
+  train_h5_paths:
     - /home/philip/Projects/factr2_next/data/free_motion_20260704_012657.h5
     - /home/philip/Projects/factr2_next/data/free_motion_20260704_125126.h5
-  episodes: all
+    - /home/philip/Projects/factr2_next/data/free_motion_20260707_031702.h5
+  train_episodes: all
+  val_h5_paths:
+    - /home/philip/Projects/factr2_next/data/free_motion_20260707_033047.h5
+  val_episodes: all
+  report_val_by_episode: true
   arm_mode: both
   arms: [left, right]
   keys:
@@ -12,6 +17,8 @@ data:
     measured_joint_torque: "{arm}_measured_joint_torque"
   history: 50
   val_fraction: 0.1
+  val_split: contiguous
+  val_buffer_windows: 50
 
 model:
   type: lstm

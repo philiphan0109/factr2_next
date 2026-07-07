@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import yaml
 from torch.utils.data import DataLoader, Subset
 
-from factr2_next.training.dataset import NextTorqueDataset
+from factr2_next.training.dataset import NextTorqueDataset, list_episode_specs
 from factr2_next.training.models import build_model
 
 
@@ -28,34 +28,29 @@ def main():
 
 def train_arm(cfg, arm):
     data_cfg = cfg["data"]
-    dataset = NextTorqueDataset(
-        data_cfg["h5_paths"],
-        data_cfg["keys"],
-        data_cfg["history"],
-        arm=arm,
-        episodes=data_cfg.get("episodes", "all"),
-    )
-    train_idx, val_idx = split_indices(len(dataset), data_cfg.get("val_fraction", 0.1))
-    norm = fit_normalization(dataset.x[train_idx], dataset.y[train_idx])
-    apply_normalization(dataset, norm)
+    train_dataset, val_dataset, val_episode_specs = make_datasets(data_cfg, arm)
+    train_x, train_y = dataset_arrays(train_dataset)
+    norm = fit_normalization(train_x, train_y)
+    apply_normalization_pair(train_dataset, val_dataset, norm)
 
     device = torch.device(cfg["train"].get("device", "cpu"))
     if device.type == "cuda" and not torch.cuda.is_available():
         device = torch.device("cpu")
 
     model_cfg = normalized_model_cfg(cfg["model"])
+    base_dataset = unwrap_dataset(train_dataset)
     model = build_model(
         model_cfg,
-        dataset.input_size,
-        dataset.output_size,
-        dataset.history,
+        base_dataset.input_size,
+        base_dataset.output_size,
+        base_dataset.history,
     ).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=float(cfg["train"].get("learning_rate", 1e-3)))
     batch_size = int(cfg["train"].get("batch_size", 2048))
-    train_loader = DataLoader(Subset(dataset, train_idx), batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(Subset(dataset, val_idx), batch_size=batch_size)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
-    metrics = {"arm": arm, "train_loss": [], "val_loss": []}
+    metrics = {"arm": arm, "train_loss": [], "val_loss": [], "val_by_episode": {}}
     epochs = int(cfg["train"].get("epochs", 20))
     for epoch in range(1, epochs + 1):
         train_loss = run_epoch(model, train_loader, device, opt)
@@ -64,9 +59,63 @@ def train_arm(cfg, arm):
         metrics["val_loss"].append(val_loss)
         print(f"{arm}: epoch {epoch:03d} train={train_loss:.6f} val={val_loss:.6f}")
 
+    if data_cfg.get("report_val_by_episode", True):
+        metrics["val_by_episode"] = evaluate_by_episode(
+            model,
+            data_cfg,
+            arm,
+            norm,
+            device,
+            batch_size,
+            val_episode_specs,
+        )
+        for label, loss in metrics["val_by_episode"].items():
+            print(f"{arm}: val {label}={loss:.6f}")
+
     out_dir = make_run_dir(cfg["save"], arm)
-    save_run(out_dir, model, cfg, norm, metrics, dataset, model_cfg)
+    save_run(out_dir, model, cfg, norm, metrics, base_dataset, model_cfg)
     print(f"{arm}: saved {out_dir}")
+
+
+def make_datasets(data_cfg, arm):
+    keys = data_cfg["keys"]
+    history = data_cfg["history"]
+    train_paths = data_cfg.get("train_h5_paths", data_cfg.get("h5_paths", []))
+    val_paths = data_cfg.get("val_h5_paths", [])
+    train_episodes = data_cfg.get("train_episodes", data_cfg.get("episodes", "all"))
+    val_episodes = data_cfg.get("val_episodes", "all")
+
+    if val_paths:
+        train_dataset = NextTorqueDataset(
+            train_paths,
+            keys,
+            history,
+            arm=arm,
+            episodes=train_episodes,
+        )
+        val_dataset = NextTorqueDataset(
+            val_paths,
+            keys,
+            history,
+            arm=arm,
+            episodes=val_episodes,
+        )
+        return train_dataset, val_dataset, list_episode_specs(val_paths, val_episodes)
+
+    dataset = NextTorqueDataset(
+        train_paths,
+        keys,
+        history,
+        arm=arm,
+        episodes=train_episodes,
+    )
+    train_idx, val_idx = split_indices(
+        len(dataset),
+        data_cfg.get("val_fraction", 0.1),
+        data_cfg.get("val_buffer_windows", history),
+        data_cfg.get("val_split", "contiguous"),
+    )
+    return Subset(dataset, train_idx), Subset(dataset, val_idx), []
 
 
 def run_epoch(model, loader, device, opt=None):
@@ -99,10 +148,16 @@ def resolve_arms(data_cfg):
     )
 
 
-def split_indices(n, val_fraction):
-    indices = np.random.permutation(n)
+def split_indices(n, val_fraction, buffer_windows=0, mode="contiguous"):
+    if mode == "random":
+        indices = np.random.permutation(n)
+        val_n = max(1, int(n * float(val_fraction)))
+        return indices[val_n:], indices[:val_n]
+
     val_n = max(1, int(n * float(val_fraction)))
-    return indices[val_n:], indices[:val_n]
+    val_start = n - val_n
+    train_end = max(0, val_start - int(buffer_windows))
+    return np.arange(train_end), np.arange(val_start, n)
 
 
 def fit_normalization(x, y):
@@ -115,8 +170,48 @@ def fit_normalization(x, y):
 
 
 def apply_normalization(dataset, norm):
+    if isinstance(dataset, Subset):
+        apply_normalization(dataset.dataset, norm)
+        return
     dataset.x = (dataset.x - norm["x_mean"]) / norm["x_std"]
     dataset.y = (dataset.y - norm["y_mean"]) / norm["y_std"]
+
+
+def apply_normalization_pair(train_dataset, val_dataset, norm):
+    train_base = unwrap_dataset(train_dataset)
+    val_base = unwrap_dataset(val_dataset)
+    apply_normalization(train_base, norm)
+    if val_base is not train_base:
+        apply_normalization(val_base, norm)
+
+
+def dataset_arrays(dataset):
+    if isinstance(dataset, Subset):
+        return dataset.dataset.x[dataset.indices], dataset.dataset.y[dataset.indices]
+    return dataset.x, dataset.y
+
+
+def unwrap_dataset(dataset):
+    return dataset.dataset if isinstance(dataset, Subset) else dataset
+
+
+def evaluate_by_episode(model, data_cfg, arm, norm, device, batch_size, specs):
+    losses = {}
+    if not specs:
+        return losses
+    for path, episode in specs:
+        dataset = NextTorqueDataset(
+            [path],
+            data_cfg["keys"],
+            data_cfg["history"],
+            arm=arm,
+            episodes=[episode],
+        )
+        apply_normalization(dataset, norm)
+        loader = DataLoader(dataset, batch_size=batch_size)
+        label = f"{Path(path).name}:{episode}"
+        losses[label] = run_epoch(model, loader, device)
+    return losses
 
 
 def make_run_dir(save_cfg, arm):

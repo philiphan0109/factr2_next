@@ -64,7 +64,7 @@ shared:
       kd: 0.04315069084
 
     factr2_torque_feedback:
-      enable: true
+      enable: false
       external_joint_torque_topic: "/next/{arm}/external_joint_torque"
       contact_state_topic: "/next/{arm}/contact_state"
       feedback_torque_topic: "/factr2_feedback/{arm}/torque"
