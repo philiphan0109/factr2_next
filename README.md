@@ -1,10 +1,8 @@
 # FACTR NEXT: Neural External Torque Estimation
 
-[Steven Oh](https://stevenoh2003.github.io/)*, [Jason Jingzhou Liu](https://jasonjzliu.com/)*, [Tony Tao](https://tony-tao.com/)*, Philip Han, [Kenneth Shaw](https://kennyshaw.net/), [Satoshi Funabashi](https://sites.google.com/site/bashifunabashi/), [Ruslan Salakhutdinov](https://www.cs.cmu.edu/~rsalakhu/), [Deepak Pathak](https://www.cs.cmu.edu/~dpathak/)
+[Steven Oh](https://stevenoh2003.github.io)<sup>\*</sup>, [Jason Jingzhou Liu](https://jasonjzliu.com)<sup>\*</sup>, [Tony Tao](https://tony-tao.com)<sup>\*</sup>, Philip Han, [Kenneth Shaw](https://kennyshaw.net), [Satoshi Funabashi](https://sites.google.com/site/bashifunabashi/), [Ruslan Salakhutdinov](https://www.cs.cmu.edu/~rsalakhu/), [Deepak Pathak](https://www.cs.cmu.edu/~dpathak/)
 
-Carnegie Mellon University and Waseda University
-
-* Equal contribution
+_Carnegie Mellon University and Waseda University_
 
 [Project Page](https://jasonjzliu.com/factr2/) | [arXiv](https://arxiv.org/abs/2606.12406)
 
