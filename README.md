@@ -29,7 +29,7 @@ This repository contains nodes for recording free-motion data, training NEXT mod
 - `src/factr2_next`: Core NEXT package for data recording, model training, online inference, and visualization.
 - `src/piper_control`: Optional Piper hardware interface used by the demo launch files.
 - `src/teacher_arm`: Optional Gello/Piper teacher-arm teleoperation package, including optional FACTR2 torque feedback.
-- `src/rdm_bringup`: Optional launch files for Piper/Gello teleoperation demos.
+- `src/system_bringup`: Optional launch files for Piper/Gello teleoperation demos.
 
 ## Install
 
@@ -204,7 +204,7 @@ The Piper/Gello demo packages are provided to reproduce the hardware teleop setu
 
 - `piper_control` runs the Piper hardware interface.
 - `teacher_arm` runs the Gello/Piper leader-follower teleop controller.
-- `rdm_bringup` provides launch files that start both pieces together.
+- `system_bringup` provides launch files that start both pieces together.
 
 Before running the demo, edit the hardware-specific config files:
 
@@ -214,13 +214,13 @@ Before running the demo, edit the hardware-specific config files:
 For a single right-arm demo:
 
 ```bash
-ros2 launch rdm_bringup right_arm_teleop.launch.py
+ros2 launch system_bringup right_arm_teleop.launch.py
 ```
 
 For a bimanual demo:
 
 ```bash
-ros2 launch rdm_bringup bimanual_teleop.launch.py
+ros2 launch system_bringup bimanual_teleop.launch.py
 ```
 
 The launch files pass `name: right` or `name: left` into both nodes. Those names select the matching config blocks and produce topics such as `/piper/right/joint_pos_obs`, `/piper/right/joint_pos_cmd`, `/piper/left/joint_pos_obs`, and `/piper/left/joint_pos_cmd`.

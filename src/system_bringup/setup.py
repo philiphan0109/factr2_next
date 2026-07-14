@@ -3,7 +3,7 @@ from glob import glob
 
 from setuptools import find_packages, setup
 
-package_name = 'rdm_bringup'
+package_name = 'system_bringup'
 
 setup(
     name=package_name,
