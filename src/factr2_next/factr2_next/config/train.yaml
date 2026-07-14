@@ -1,21 +1,23 @@
 data:
   train_h5_paths:
-    - /home/philip/Projects/factr2_next/data/free_motion_20260704_012657.h5
-    - /home/philip/Projects/factr2_next/data/free_motion_20260704_125126.h5
-    - /home/philip/Projects/factr2_next/data/free_motion_20260707_031702.h5
-  train_episodes: all
+    - /path/to/free_motion_train.h5
   val_h5_paths:
-    - /home/philip/Projects/factr2_next/data/free_motion_20260707_033047.h5
+    - /path/to/free_motion_val.h5
+
   val_episodes: all
-  report_val_by_episode: true
-  arm_mode: both
-  arms: [left, right]
+  train_episodes: all
+
+  # Use "single" for H5 files recorded with the default record.yaml.
+  # Use "both" with arm-formatted keys for bimanual datasets.
+  arm_mode: single
   keys:
-    joint_pos: "{arm}_joint_pos"
-    joint_vel: "{arm}_joint_vel"
-    joint_cmd: "{arm}_joint_cmd"
-    measured_joint_torque: "{arm}_measured_joint_torque"
+    joint_pos: joint_pos
+    joint_vel: joint_vel
+    joint_cmd: joint_cmd
+    measured_joint_torque: measured_joint_torque
   history: 50
+
+  # Used only when val_h5_paths is empty.
   val_fraction: 0.1
   val_split: contiguous
   val_buffer_windows: 50
@@ -31,9 +33,10 @@ model:
 
 train:
   batch_size: 2048
+  # Good for a quick smoke test; increase for final training.
   epochs: 20
   learning_rate: 0.001
-  device: cuda
+  device: cpu
   seed: 0
 
 save:

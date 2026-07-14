@@ -2,20 +2,21 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>piper_control</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="philiphan0109@gmail.com">Philip Han</maintainer>
-  <license>TODO: License declaration</license>
+  <version>0.1.0</version>
+  <description>Piper arm ROS2 hardware interface for FACTR2 demos.</description>
+  <maintainer email="philipha@andrew.cmu.edu">philip</maintainer>
+  <license>Apache-2.0</license>
 
-  <exec_depend>rclpy</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>ament_index_python</depend>
+
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
   <exec_depend>python3-can</exec_depend>
   <exec_depend>python3-typing-extensions</exec_depend>
-  <exec_depend>ament_index_python</exec_depend>
-
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

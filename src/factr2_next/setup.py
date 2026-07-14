@@ -7,7 +7,7 @@ package_name = 'factr2_next'
 
 setup(
     name=package_name,
-    version='0.0.0',
+    version='0.1.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -18,8 +18,8 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='philip',
-    maintainer_email='philiphan0109@hotmail.com',
-    description='Robot-agnostic NEXT external joint torque estimation for FACTR2.',
+    maintainer_email='philipha@andrew.cmu.edu',
+    description='NEXT external joint torque estimation for FACTR2.',
     license='MIT',
     extras_require={
         'test': [

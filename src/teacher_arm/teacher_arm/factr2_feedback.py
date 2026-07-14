@@ -6,6 +6,14 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Bool, Float32
 
 
+DEFAULT_TOPICS = {
+    "external_joint_torque_topic": "/next/{arm}/external_joint_torque",
+    "contact_state_topic": "/next/{arm}/contact_state",
+    "feedback_torque_topic": "/factr2_feedback/{arm}/torque",
+    "feedback_gate_topic": "/factr2_feedback/{arm}/gate",
+}
+
+
 class Factr2TorqueFeedback:
     def __init__(self, node, arm, cfg, num_joints):
         self.node = node
@@ -14,10 +22,13 @@ class Factr2TorqueFeedback:
         self.enabled = bool(cfg.get("enable", False))
         self.gains = self._vec(cfg.get("gains", [0.0] * self.num_joints))
         self.damping = self._vec(cfg.get("damping_gains", [0.0] * self.num_joints))
-        self.max_torque = np.abs(self._vec(cfg.get("max_torque", [0.0] * self.num_joints)))
+        self.max_torque = np.abs(
+            self._vec(cfg.get("max_torque", [0.0] * self.num_joints))
+        )
         self.ramp_alpha = float(np.clip(cfg.get("ramp_alpha", 0.35), 0.0, 1.0))
         self.stale_timeout = float(cfg.get("stale_timeout_seconds", 0.2))
 
+        self.zero_torque = np.zeros(self.num_joints, dtype=float)
         self.tau_ext = np.zeros(self.num_joints, dtype=float)
         self.contact = False
         self.gate = 0.0
@@ -26,12 +37,12 @@ class Factr2TorqueFeedback:
         self.subs = []
         self.torque_pub = node.create_publisher(
             JointState,
-            self._topic(cfg.get("feedback_torque_topic", "/factr2_feedback/{arm}/torque")),
+            self._cfg_topic(cfg, "feedback_torque_topic"),
             10,
         )
         self.gate_pub = node.create_publisher(
             Float32,
-            self._topic(cfg.get("feedback_gate_topic", "/factr2_feedback/{arm}/gate")),
+            self._cfg_topic(cfg, "feedback_gate_topic"),
             10,
         )
 
@@ -39,12 +50,8 @@ class Factr2TorqueFeedback:
             node.get_logger().info("FACTR2 feedback disabled; publishing zero diagnostics")
             return
 
-        torque_topic = self._topic(
-            cfg.get("external_joint_torque_topic", "/next/{arm}/external_joint_torque")
-        )
-        contact_topic = self._topic(
-            cfg.get("contact_state_topic", "/next/{arm}/contact_state")
-        )
+        torque_topic = self._cfg_topic(cfg, "external_joint_torque_topic")
+        contact_topic = self._cfg_topic(cfg, "contact_state_topic")
         self.subs = [
             node.create_subscription(
                 JointState,
@@ -65,13 +72,14 @@ class Factr2TorqueFeedback:
 
     def torque(self, leader_joint_vel):
         if not self.enabled:
-            tau = np.zeros(self.num_joints, dtype=float)
-            self._publish(tau)
-            return tau
+            self._publish(self.zero_torque)
+            return self.zero_torque.copy()
 
+        # FACTR2 teleop demo: require contact and fresh NEXT messages before feedback.
         target_gate = 1.0 if self.contact and self._fresh() else 0.0
         self.gate = (1.0 - self.ramp_alpha) * self.gate + self.ramp_alpha * target_gate
 
+        # Hardware-specific map from NEXT tau_ext to teacher-arm torque; not part of NEXT.
         tau = self.gate * self.gains * self.tau_ext
         tau -= self.damping * np.asarray(leader_joint_vel, dtype=float)[: self.num_joints]
         tau = np.clip(tau, -self.max_torque, self.max_torque)
@@ -107,6 +115,9 @@ class Factr2TorqueFeedback:
         msg.position = tau.tolist()
         self.torque_pub.publish(msg)
         self.gate_pub.publish(Float32(data=float(self.gate)))
+
+    def _cfg_topic(self, cfg, key):
+        return self._topic(cfg.get(key, DEFAULT_TOPICS[key]))
 
     def _topic(self, topic):
         return str(topic).format(arm=self.arm)

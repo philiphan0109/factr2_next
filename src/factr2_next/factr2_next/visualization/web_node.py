@@ -28,7 +28,7 @@ canvas{display:block;width:100%;height:580px}.controls{display:grid;grid-templat
 .item.off{opacity:.42}.sw{width:10px;height:10px;border-radius:2px;flex:0 0 auto}input{accent-color:#4ea1ff;margin:0}.value{color:var(--muted);font-variant-numeric:tabular-nums}.status{margin-top:8px;color:var(--muted);font-size:12px}
 </style></head>
 <body><main>
-<div class="top"><div><h1>FACTR2 NEXT</h1><div class="pill" id="arm">waiting</div></div><div class="pill" id="status">connecting</div></div>
+<div class="top"><div><h1>FACTR2 NEXT</h1><div class="pill" id="topic-root">waiting</div></div><div class="pill" id="status">connecting</div></div>
 <div class="plot"><canvas id="plot" width="1240" height="580"></canvas></div>
 <div class="controls" id="controls"></div>
 </main>
@@ -107,7 +107,7 @@ function grid(pad,W,H,x0,x1,y0,y1){
   }
 }
 new EventSource("/events").onmessage=(ev)=>{
-  data=JSON.parse(ev.data); document.getElementById("arm").textContent=`arm: ${data.arm}  samples: ${(data.t||[]).length}`;
+  data=JSON.parse(ev.data); document.getElementById("topic-root").textContent=`topics: ${data.next_topic_root}  samples: ${(data.t||[]).length}`;
   statusEl.textContent="live"; draw();
 };
 setupControls(); draw();
@@ -115,114 +115,111 @@ setupControls(); draw();
 """
 
 
+JOINT_COUNT = 6
+PLOT_KEYS = (
+    "t",
+    "ext_norm",
+    "ext_raw_norm",
+    "fb_norm",
+    "fb_gate",
+    "free_norm",
+    "mse",
+    "score",
+    "contact",
+    *(f"ext_j{i}" for i in range(1, JOINT_COUNT + 1)),
+    *(f"raw_j{i}" for i in range(1, JOINT_COUNT + 1)),
+    *(f"fb_j{i}" for i in range(1, JOINT_COUNT + 1)),
+)
+TORQUE_KEYS = {
+    "ext": ("ext_norm", "ext"),
+    "raw": ("ext_raw_norm", "raw"),
+    "fb": ("fb_norm", "fb"),
+}
+
+
 class WebNode(Node):
     def __init__(self):
         super().__init__("factr2_next_visualize")
         default = Path(get_package_share_directory("factr2_next")) / "config" / "visualize.yaml"
         self.cfg = self._load_config(self.declare_parameter("config_file", str(default)).value)
-        self.arm = str(self.cfg.get("arm", "right"))
+        self.next_topic_root = str(self.cfg.get("next_topic_root", "/next"))
+        self.feedback_topic_root = str(self.cfg.get("feedback_topic_root", "/factr2_feedback"))
         self.max_points = int(self.cfg.get("plot", {}).get("max_points", 500))
-        self.keys = (
-            "t",
-            "ext_norm",
-            "ext_raw_norm",
-            "fb_norm",
-            "fb_gate",
-            "free_norm",
-            "mse",
-            "score",
-            "contact",
-            "ext_j1",
-            "ext_j2",
-            "ext_j3",
-            "ext_j4",
-            "ext_j5",
-            "ext_j6",
-            "raw_j1",
-            "raw_j2",
-            "raw_j3",
-            "raw_j4",
-            "raw_j5",
-            "raw_j6",
-            "fb_j1",
-            "fb_j2",
-            "fb_j3",
-            "fb_j4",
-            "fb_j5",
-            "fb_j6",
-        )
+        self.keys = PLOT_KEYS
         self.data = {key: deque(maxlen=self.max_points) for key in self.keys}
         self.latest = {key: np.nan for key in self.keys if key != "t"}
         self.t0, self.seq, self.running = time.monotonic(), 0, True
         self.cond = threading.Condition()
 
         self._subscribe()
-        port = int(self.cfg.get("web", {}).get("port", 8080))
-        self.httpd = ThreadingHTTPServer(("0.0.0.0", port), self._handler())
+        web = self.cfg.get("web", {})
+        host = str(web.get("host", "127.0.0.1"))
+        port = int(web.get("port", 8080))
+        self.httpd = ThreadingHTTPServer((host, port), self._handler())
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
-        self.get_logger().info(f"NEXT plot at http://localhost:{port}")
+        self.get_logger().info(f"NEXT plot at http://{host}:{port}")
 
     def _subscribe(self):
-        outputs = self.cfg["outputs"]
-        raw_topic = outputs.get(
+        outputs = self._output_topics(self.cfg["outputs"])
+        outputs.setdefault(
             "external_joint_torque_raw",
             outputs["external_joint_torque"] + "/raw",
         )
         self.subs = [
-            self.create_subscription(
+            self._sub(
                 JointState,
-                self._topic(outputs["external_joint_torque"]),
+                outputs["external_joint_torque"],
                 lambda m: self._set_torque("ext", m.position, True),
                 qos_profile_sensor_data,
             ),
-            self.create_subscription(
+            self._sub(
                 JointState,
-                self._topic(raw_topic),
+                outputs["external_joint_torque_raw"],
                 lambda m: self._set_torque("raw", m.position),
                 qos_profile_sensor_data,
             ),
-            self.create_subscription(
+            self._sub(
                 JointState,
-                self._topic(outputs["free_joint_torque_pred"]),
+                outputs["free_joint_torque_pred"],
                 lambda m: self._set_norm("free_norm", m.position),
                 qos_profile_sensor_data,
             ),
-            self.create_subscription(
+            self._sub(
                 Float32,
-                self._topic(outputs["mse"]),
+                outputs["mse"],
                 lambda m: self._set_scalar("mse", m.data),
                 10,
             ),
-            self.create_subscription(
+            self._sub(
                 Float32,
-                self._topic(outputs["score"]),
+                outputs["score"],
                 lambda m: self._set_scalar("score", m.data),
                 10,
             ),
         ]
         if "contact_state" in outputs:
             self.subs.append(
-                self.create_subscription(
+                self._sub(
                     Bool,
-                    self._topic(outputs["contact_state"]),
+                    outputs["contact_state"],
                     lambda m: self._set_scalar("contact", 1.0 if m.data else 0.0),
                     10,
                 )
             )
         if "feedback_torque" in outputs:
             self.subs.append(
-                self.create_subscription(
+                self._sub(
                     JointState,
-                    self._topic(outputs["feedback_torque"]),
+                    outputs["feedback_torque"],
                     lambda m: self._set_torque("fb", m.position),
                     qos_profile_sensor_data,
                 )
             )
         if "feedback_gate" in outputs:
             self.subs.append(
-                self.create_subscription(
+                self._sub(
                     Float32,
-                    self._topic(outputs["feedback_gate"]),
+                    outputs["feedback_gate"],
                     lambda m: self._set_scalar("fb_gate", m.data),
                     10,
                 )
@@ -235,15 +232,12 @@ class WebNode(Node):
 
     def _set_torque(self, prefix, values, sample=False):
         values = np.asarray(values, dtype=float)
-        keys = {
-            "ext": ("ext_norm", "ext"),
-            "raw": ("ext_raw_norm", "raw"),
-            "fb": ("fb_norm", "fb"),
-        }
-        norm_key, joint_prefix = keys[prefix]
+        norm_key, joint_prefix = TORQUE_KEYS[prefix]
         self.latest[norm_key] = float(np.linalg.norm(values))
-        for i in range(6):
-            self.latest[f"{joint_prefix}_j{i + 1}"] = float(values[i]) if i < len(values) else np.nan
+        for i in range(JOINT_COUNT):
+            self.latest[f"{joint_prefix}_j{i + 1}"] = (
+                float(values[i]) if i < len(values) else np.nan
+            )
         if sample:
             self._append()
 
@@ -262,8 +256,11 @@ class WebNode(Node):
 
     def _snapshot(self):
         with self.cond:
-            out = {k: [x if np.isfinite(x) else None for x in v] for k, v in self.data.items()}
-            out["arm"] = self.arm
+            out = {
+                k: [x if np.isfinite(x) else None for x in v]
+                for k, v in self.data.items()
+            }
+            out["next_topic_root"] = self.next_topic_root
             return json.dumps(out).encode()
 
     def _handler(self):
@@ -310,10 +307,19 @@ class WebNode(Node):
         super().destroy_node()
 
     def _topic(self, topic):
-        return str(topic).format(arm=self.arm)
+        return str(topic).format(
+            next_topic_root=self.next_topic_root,
+            feedback_topic_root=self.feedback_topic_root,
+        )
+
+    def _output_topics(self, outputs):
+        return {key: self._topic(topic) for key, topic in outputs.items()}
+
+    def _sub(self, msg_type, topic, callback, qos):
+        return self.create_subscription(msg_type, topic, callback, qos)
 
     def _load_config(self, path):
-        with open(path, "r") as f:
+        with open(Path(path).expanduser(), "r") as f:
             return yaml.safe_load(f) or {}
 
 

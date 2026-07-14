@@ -1,9 +1,13 @@
+# Piper/Gello teleop demo config.
+# Before running, set each Dynamixel port from:
+#   ls /dev/serial/by-id/
+
 right:
   gello_base_orientation: [0.7853981634, 0.0, 0.0]
   calibration_joint_pos: [1.57, 0.0, 0.0, 0.0, 0.0, 0.0]
 
   dynamixel:
-    port: "usb-FTDI_USB__-__Serial_Converter_FTAA0B6M-if00-port0" # found with ls /dev/serial/by-id/
+    port: "usb-FTDI_USB__-__Serial_Converter_RIGHT-if00-port0"
     joint_signs: [1, -1, -1, 1, -1, 1, 1]
 
 left:
@@ -11,7 +15,7 @@ left:
   calibration_joint_pos: [-1.57, 0.0, 0.0, 0.0, 0.0, 0.0]
 
   dynamixel:
-    port: "usb-FTDI_USB__-__Serial_Converter_FT6RW7T8-if00-port0"
+    port: "usb-FTDI_USB__-__Serial_Converter_LEFT-if00-port0"
     joint_signs: [1, -1, -1, 1, -1, 1, 1]
 
 
@@ -24,7 +28,7 @@ shared:
   
   gripper_teleop:
     gripper_command_range: 0.5  # maximum range (in rad) of leader gripper trigger
-    actuation_range: 1.0        # follower xommand max, 0 = fully closed, actuation_range = fully open
+    actuation_range: 1.0        # follower command max, 0 = fully closed, actuation_range = fully open
  
   arm_teleop:
     teacher_arm_urdf: "piper_gello.urdf"
@@ -36,14 +40,13 @@ shared:
 
   controller:
     frequency: 500
-    # torque feedback
 
     gravity_comp:
       enable: false
       modifier: [0.5, 0.6, 0.75, 1.0, 0.75, 1.2]
 
     static_friction_dither:
-      enable: false  # if enabled ensure that gravity compensation is also enabled/
+      enable: false  # if enabled, ensure gravity compensation is also enabled
       enable_speed: 0.9
       modifier: 1.7
 
@@ -56,7 +59,6 @@ shared:
 
     joint_limit_barrier_repulsion:
       kp: 2.0
-      # kp: 1.03561658022
       kd: 0.04315069084
     
     joint_position_control:

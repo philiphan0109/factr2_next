@@ -1,15 +1,10 @@
-import os
-import time 
 import numpy as np
-import yaml
- 
 
 import rclpy
 from rclpy.qos import qos_profile_sensor_data
 from std_msgs.msg import Bool
 from sensor_msgs.msg import JointState
 from teacher_arm.base_teleop import BaseTeleopController
-
 
 class PiperTeleop(BaseTeleopController):
     def __init__(self):

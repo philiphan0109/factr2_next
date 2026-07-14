@@ -1,3 +1,7 @@
+# Piper hardware config.
+# Set can_port to the SocketCAN interface for each arm, e.g. can0 or can1.
+# When auto_enable is true, piper_node enables the arm and moves it to home_pos on startup.
+
 shared:
   publish_hz: 100
   command_hz: 200
@@ -8,15 +12,15 @@ shared:
 right:
   can_port: can0
   gripper_exist: true
-  robot_base_pose: [0.0,-0.13, 0.0, 0.7853981634, 0.0, 0.0]
+  robot_base_pose: [0.0, -0.13, 0.0, 0.7853981634, 0.0, 0.0]
   modifier: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   home_pos: [0.0, 0.785398, -0.785398, 0.0, 0.0, 0.0]
   rest_pos: [1.57, 0.15, 0.0, 0.0, 0.3, 0.0]
 
 left:
   can_port: can1
-  gripper_exist: true 
-  robot_base_pose: [0.0,0.13, 0.0, -0.7853981634, 0.0, 0.0]
+  gripper_exist: true
+  robot_base_pose: [0.0, 0.13, 0.0, -0.7853981634, 0.0, 0.0]
   modifier: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   home_pos: [0.0, 0.785398, -0.785398, 0.0, 0.0, 0.0]
   rest_pos: [-1.57, 0.15, 0.0, 0.0, 0.3, 0.0]

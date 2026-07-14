@@ -16,6 +16,7 @@ class HistoryBuffer:
         joint_pos = np.asarray(joint_pos, dtype=np.float32)
         joint_vel = np.asarray(joint_vel, dtype=np.float32)
         joint_cmd = np.asarray(joint_cmd, dtype=np.float32)
+        # Match the NEXT training input exactly: [q, qdot, q_cmd - q].
         self.rows.append(np.concatenate([joint_pos, joint_vel, joint_cmd - joint_pos]))
 
     def array(self):

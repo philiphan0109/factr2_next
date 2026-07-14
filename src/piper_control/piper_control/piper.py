@@ -3,9 +3,7 @@ import threading
 import time
 import numpy as np
 
-from piper_sdk import *
 from piper_sdk import C_PiperInterface_V2
-import yaml
 
 class Rate:
     def __init__(self, hz):
@@ -21,8 +19,7 @@ class Rate:
             self.next = time.perf_counter()
 
 class PiperArm:
-    def __init__(self, urdf_dir, name, config):
-        self.urdf_dir = urdf_dir
+    def __init__(self, name, config):
         self.name = name
         self.command_hz = config["shared"]["command_hz"]
 
@@ -219,7 +216,7 @@ class PiperArm:
             self.piper.GetArmHighSpdInfoMsgs().motor_6.current / 1000,
         ])
 
-        self.joint_current = np.asarray([
+        self.joint_effort = np.asarray([
             self.piper.GetArmHighSpdInfoMsgs().motor_1.effort / 1000,
             self.piper.GetArmHighSpdInfoMsgs().motor_2.effort / 1000,
             self.piper.GetArmHighSpdInfoMsgs().motor_3.effort / 1000,
@@ -231,6 +228,7 @@ class PiperArm:
         self.joint_state_dict["joint_pos"] = self.joint_pos.copy()
         self.joint_state_dict["joint_motor_vel"] = self.joint_motor_velocity.copy()
         self.joint_state_dict["joint_current"] = self.joint_current.copy()
+        self.joint_state_dict["joint_effort"] = self.joint_effort.copy()
 
         if self.gripper_exist:
             self.gripper_prev_pos = self.gripper_pos
@@ -304,41 +302,3 @@ class PiperArm:
                 print(f"[IGNORING] Piper Arm {self.can_port} Has No Gripper. Ignoring Gripper Position Command.")
         else:
             print(f"[IGNORING] Piper Arm {self.can_port} Not Enabled. Ignoring Gripper Position Command.")
-
-def main():
-
-    with open("/home/kshaw/rdm-deploy/src/piper_control/piper_control/configs/piper_arm.yaml", "r") as f:
-        config = yaml.safe_load(f)
-    
-    arm = PiperArm(urdf_dir="/home/kshaw/rdm-deploy/src/piper_control/piper_control/urdf", name = "right", config = config)
-    arm.enable_arm()
-
-    start_time = time.time()
-
-    at_hold_pose = False
-    
-    try: 
-        while True:
-            joint_states = arm.read_joint_state()
-            joint_positions = joint_states["joint_pos"]
-
-            t = time.time() - start_time
-
-            if not at_hold_pose:
-                arm.go_to_joint_config([0.0, 0.35, -0.35, 0.0, 0.0, 0.0])
-                time.sleep(0.1)
-                at_hold_pose = True
-            else:
-                wiggle1 = 0.05 * math.sin(2 * math.pi * 0.25 * t)
-                wiggle2 = 0.5 * math.sin(2 * math.pi * 0.15 * t)
-                wiggle3 = 0.5 * math.sin(2 * math.pi * 0.35 * t)
-                arm.set_arm_joint_target([0.0, 0.35, -0.35, 0.0, 0.0, 0.0])
-                arm.set_gripper_target(abs(wiggle1), 2.0)
-
-            time.sleep(1 / arm.command_hz)
-    
-    except KeyboardInterrupt:
-        arm.disable()
-
-if __name__ == "__main__":
-    main()

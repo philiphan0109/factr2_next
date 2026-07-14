@@ -1,6 +1,9 @@
 output_dir: data
 session_name: free_motion
 
+# Root namespace for the robot/arm being recorded.
+robot_topic_root: /piper/right
+
 sync:
   queue_size: 20
   slop_seconds: 0.03
@@ -14,34 +17,20 @@ recording:
 # Synchronized samples are cached, then rows are written by a fixed-rate timer:
 # ep_0000/<key>/data and ep_0000/<key>/timestamps.
 topics:
-  left_joint_pos:
-    topic: /piper/left/joint_pos_obs
+  joint_pos:
+    topic: "{robot_topic_root}/joint_pos_obs"
     field: position
 
-  left_joint_vel:
-    topic: /piper/left/joint_vel_obs
+  joint_vel:
+    topic: "{robot_topic_root}/joint_vel_obs"
     field: position
 
-  left_joint_cmd:
-    topic: /piper/left/joint_pos_cmd
+  joint_cmd:
+    topic: "{robot_topic_root}/joint_pos_cmd"
     field: position
 
-  left_measured_joint_torque:
-    topic: /piper/left/joint_effort_obs
-    field: position
-
-  right_joint_pos:
-    topic: /piper/right/joint_pos_obs
-    field: position
-
-  right_joint_vel:
-    topic: /piper/right/joint_vel_obs
-    field: position
-
-  right_joint_cmd:
-    topic: /piper/right/joint_pos_cmd
-    field: position
-
-  right_measured_joint_torque:
-    topic: /piper/right/joint_effort_obs
+  # Piper publishes observed effort/current in JointState.position.
+  # For standard JointState effort, set field: effort.
+  measured_joint_torque:
+    topic: "{robot_topic_root}/joint_effort_obs"
     field: position

@@ -1,5 +1,4 @@
 import os
-import time
 import numpy as np
 import yaml
 
@@ -9,14 +8,13 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import PoseStamped
 
 from ament_index_python.packages import get_package_share_directory
+
 
 class PiperNode(Node):
     def __init__(self):
         super().__init__("piper_node")
-
 
         self.name = self.declare_parameter("name", "right").get_parameter_value().string_value
         self.config_file_name = self.declare_parameter("config_file", "piper_arm.yaml").get_parameter_value().string_value
@@ -24,16 +22,13 @@ class PiperNode(Node):
         share_dir = get_package_share_directory('piper_control')
 
         self.config_file_path = os.path.join(share_dir, 'configs', self.config_file_name)
-        self.urdf_model_dir = os.path.join(share_dir, 'urdf')
         
         with open(self.config_file_path, "r") as config_file:
             self.config = yaml.safe_load(config_file)
         
-        self.can_port = self.config[self.name]["can_port"]
-        self.gripper_exist = self.config[self.name]["gripper_exist"]
         self.publish_hz = self.config["shared"]["publish_hz"]
         
-        self.piper = PiperArm(urdf_dir=self.urdf_model_dir, name=self.name, config=self.config)
+        self.piper = PiperArm(name=self.name, config=self.config)
         self.piper.go_to_home_config()
 
         self._set_up_communication()
@@ -48,25 +43,6 @@ class PiperNode(Node):
         msg.position = [float(x) for x in data]
         return msg
 
-    def _create_stamped_pose_message(self, position, orientation = None, timestamp = None):
-        msg = PoseStamped()
-        if timestamp is not None:
-            msg.header.stamp = timestamp
-        else:
-            msg.header.stamp = self.get_clock().now().to_msg()
-        
-        msg.pose.position.x = position[0]
-        msg.pose.position.y = position[1]
-        msg.pose.position.z = position[2]
-
-        if orientation is not None:
-            msg.pose.orientation.x = orientation[0]
-            msg.pose.orientation.y = orientation[1]
-            msg.pose.orientation.z = orientation[2]
-            msg.pose.orientation.w = orientation[3]
-        
-        return msg
-    
     def _set_up_communication(self):
         
         self.joint_pos_cmd_sub = self.create_subscription(JointState, f"/piper/{self.name}/joint_pos_cmd", self._joint_pos_cmd_callback, qos_profile=qos_profile_sensor_data)
@@ -96,7 +72,7 @@ class PiperNode(Node):
         curr_time = self.get_clock().now().to_msg()
         joint_position = self.piper.get_joint_position()
         joint_velocity = self.piper.get_joint_arithmetic_velocity()
-        joint_effort = self.piper.get_joint_current()
+        joint_effort = self.piper.get_joint_effort()
         gripper_position = self.piper.get_gripper_position()
         gripper_effort = self.piper.get_gripper_effort()
 

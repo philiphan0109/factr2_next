@@ -2,10 +2,24 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>teacher_arm</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="philiphan0109@gmail.com">kshaw</maintainer>
+  <version>0.1.0</version>
+  <description>Teacher-arm teleoperation and optional FACTR2 feedback demo.</description>
+  <maintainer email="philipha@andrew.cmu.edu">philip</maintainer>
   <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>ament_index_python</depend>
+
+  <exec_depend>pinocchio</exec_depend>
+  <exec_depend>dynamixel_sdk</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-serial</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

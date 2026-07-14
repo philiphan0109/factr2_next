@@ -48,7 +48,13 @@ class GRURegressor(nn.Module):
             dropout=dropout if num_layers > 1 else 0.0,
         )
         head_input = hidden_size * (2 if bidirectional else 1)
-        self.head = regression_head(head_input, output_size, head_hidden, head_layers, dropout)
+        self.head = regression_head(
+            head_input,
+            output_size,
+            head_hidden,
+            head_layers,
+            dropout,
+        )
 
     def forward(self, x):
         y, _ = self.gru(x)
@@ -77,7 +83,13 @@ class LSTMRegressor(nn.Module):
             dropout=dropout if num_layers > 1 else 0.0,
         )
         head_input = hidden_size * (2 if bidirectional else 1)
-        self.head = regression_head(head_input, output_size, head_hidden, head_layers, dropout)
+        self.head = regression_head(
+            head_input,
+            output_size,
+            head_hidden,
+            head_layers,
+            dropout,
+        )
 
     def forward(self, x):
         y, _ = self.lstm(x)
@@ -121,4 +133,6 @@ def build_model(model_cfg, input_size, output_size, history):
             bidirectional=bool(model_cfg.get("bidirectional", False)),
             **common,
         )
-    raise ValueError(f"Unsupported model type '{model_type}'. Use one of: mlp, gru, lstm.")
+    raise ValueError(
+        f"Unsupported model type '{model_type}'. Use one of: mlp, gru, lstm."
+    )

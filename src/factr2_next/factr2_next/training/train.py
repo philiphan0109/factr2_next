@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import yaml
 from torch.utils.data import DataLoader, Subset
 
-from factr2_next.training.dataset import NextTorqueDataset, list_episode_specs
+from factr2_next.training.dataset import NextTorqueDataset
 from factr2_next.training.models import build_model
 
 
@@ -27,9 +27,11 @@ def main():
 
 
 def train_arm(cfg, arm):
+    label = arm if arm is not None else "single"
     data_cfg = cfg["data"]
-    train_dataset, val_dataset, val_episode_specs = make_datasets(data_cfg, arm)
+    train_dataset, val_dataset = make_datasets(data_cfg, arm)
     train_x, train_y = dataset_arrays(train_dataset)
+    # Fit normalization on training data only, then reuse it for validation/inference.
     norm = fit_normalization(train_x, train_y)
     apply_normalization_pair(train_dataset, val_dataset, norm)
 
@@ -45,36 +47,26 @@ def train_arm(cfg, arm):
         base_dataset.output_size,
         base_dataset.history,
     ).to(device)
-    opt = torch.optim.Adam(model.parameters(), lr=float(cfg["train"].get("learning_rate", 1e-3)))
+    opt = torch.optim.Adam(
+        model.parameters(),
+        lr=float(cfg["train"].get("learning_rate", 1e-3)),
+    )
     batch_size = int(cfg["train"].get("batch_size", 2048))
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size)
 
-    metrics = {"arm": arm, "train_loss": [], "val_loss": [], "val_by_episode": {}}
+    metrics = {"arm": label, "train_loss": [], "val_loss": []}
     epochs = int(cfg["train"].get("epochs", 20))
     for epoch in range(1, epochs + 1):
         train_loss = run_epoch(model, train_loader, device, opt)
         val_loss = run_epoch(model, val_loader, device)
         metrics["train_loss"].append(train_loss)
         metrics["val_loss"].append(val_loss)
-        print(f"{arm}: epoch {epoch:03d} train={train_loss:.6f} val={val_loss:.6f}")
-
-    if data_cfg.get("report_val_by_episode", True):
-        metrics["val_by_episode"] = evaluate_by_episode(
-            model,
-            data_cfg,
-            arm,
-            norm,
-            device,
-            batch_size,
-            val_episode_specs,
-        )
-        for label, loss in metrics["val_by_episode"].items():
-            print(f"{arm}: val {label}={loss:.6f}")
+        print(f"{label}: epoch {epoch:03d} train={train_loss:.6f} val={val_loss:.6f}")
 
     out_dir = make_run_dir(cfg["save"], arm)
     save_run(out_dir, model, cfg, norm, metrics, base_dataset, model_cfg)
-    print(f"{arm}: saved {out_dir}")
+    print(f"{label}: saved {out_dir}")
 
 
 def make_datasets(data_cfg, arm):
@@ -100,7 +92,7 @@ def make_datasets(data_cfg, arm):
             arm=arm,
             episodes=val_episodes,
         )
-        return train_dataset, val_dataset, list_episode_specs(val_paths, val_episodes)
+        return train_dataset, val_dataset
 
     dataset = NextTorqueDataset(
         train_paths,
@@ -115,7 +107,9 @@ def make_datasets(data_cfg, arm):
         data_cfg.get("val_buffer_windows", history),
         data_cfg.get("val_split", "contiguous"),
     )
-    return Subset(dataset, train_idx), Subset(dataset, val_idx), []
+    if len(train_idx) == 0 or len(val_idx) == 0:
+        raise ValueError("Validation split produced an empty train or validation set.")
+    return Subset(dataset, train_idx), Subset(dataset, val_idx)
 
 
 def run_epoch(model, loader, device, opt=None):
@@ -125,6 +119,7 @@ def run_epoch(model, loader, device, opt=None):
         x = x.to(device)
         y = y.to(device)
         pred = model(x)
+        # Paper Sec. 4, Eq. (4): L2 regression trains f_theta(x_i) -> tau_m,i.
         loss = F.mse_loss(pred, y)
         if opt is not None:
             opt.zero_grad(set_to_none=True)
@@ -138,6 +133,7 @@ def run_epoch(model, loader, device, opt=None):
 def resolve_arms(data_cfg):
     mode = data_cfg.get("arm_mode", "single")
     if mode == "both":
+        # NEXT is robot/arm-specific; bimanual data trains one model per arm.
         return list(data_cfg.get("arms", ["left", "right"]))
     if mode in ("left", "right"):
         return [mode]
@@ -195,29 +191,13 @@ def unwrap_dataset(dataset):
     return dataset.dataset if isinstance(dataset, Subset) else dataset
 
 
-def evaluate_by_episode(model, data_cfg, arm, norm, device, batch_size, specs):
-    losses = {}
-    if not specs:
-        return losses
-    for path, episode in specs:
-        dataset = NextTorqueDataset(
-            [path],
-            data_cfg["keys"],
-            data_cfg["history"],
-            arm=arm,
-            episodes=[episode],
-        )
-        apply_normalization(dataset, norm)
-        loader = DataLoader(dataset, batch_size=batch_size)
-        label = f"{Path(path).name}:{episode}"
-        losses[label] = run_epoch(model, loader, device)
-    return losses
-
-
 def make_run_dir(save_cfg, arm):
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     label = arm if arm is not None else "single"
-    out = Path(save_cfg.get("output_dir", "runs")) / f"{save_cfg.get('run_name', 'next')}_{label}_{stamp}"
+    out = (
+        Path(save_cfg.get("output_dir", "runs")).expanduser()
+        / f"{save_cfg.get('run_name', 'next')}_{label}_{stamp}"
+    )
     out.mkdir(parents=True, exist_ok=False)
     return out
 
@@ -247,7 +227,7 @@ def normalized_model_cfg(model_cfg):
 
 
 def load_yaml(path):
-    with open(path, "r") as f:
+    with open(Path(path).expanduser(), "r") as f:
         return yaml.safe_load(f) or {}
 
 

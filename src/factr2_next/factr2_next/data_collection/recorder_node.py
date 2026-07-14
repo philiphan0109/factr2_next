@@ -29,13 +29,17 @@ class RecorderNode(Node):
         config_file = self.declare_parameter("config_file", str(default_config)).value
         self.cfg = self._load_config(config_file)
 
-        self.output_dir = Path(self.cfg.get("output_dir", "data"))
+        self.output_dir = Path(self.cfg.get("output_dir", "data")).expanduser()
         self.session_name = str(self.cfg.get("session_name", "free_motion"))
+        self.robot_topic_root = str(self.cfg.get("robot_topic_root", "/robot"))
         self.topic_cfg = self.cfg.get("topics", {})
         if not self.topic_cfg:
             raise ValueError("record.yaml must define at least one topic.")
 
         self.keys = list(self.topic_cfg.keys())
+        self.topics = [
+            self._format_topic(spec["topic"]) for spec in self.topic_cfg.values()
+        ]
         self.writer = None
         self.recording = False
         self.episode_count = 0
@@ -46,7 +50,6 @@ class RecorderNode(Node):
         self.record_start_time = None
         self.last_rate_check_time = None
         self.rows_written_since_check = 0
-        self.total_rows_written = 0
         self.last_warn_time = 0.0
         self.lock = threading.Lock()
 
@@ -60,10 +63,10 @@ class RecorderNode(Node):
             Subscriber(
                 self,
                 JointState,
-                spec["topic"],
+                topic,
                 qos_profile=qos_profile_sensor_data,
             )
-            for spec in self.topic_cfg.values()
+            for topic in self.topics
         ]
 
         sync_cfg = self.cfg.get("sync", {})
@@ -123,7 +126,6 @@ class RecorderNode(Node):
             self.writer.append(self.latest_timestamp_ns, self.latest_samples)
             self.last_written_timestamp_ns = self.latest_timestamp_ns
             self.rows_written_since_check += 1
-            self.total_rows_written += 1
 
     def _extract_field(self, msg, field):
         if field == "position":
@@ -165,17 +167,18 @@ class RecorderNode(Node):
             self.record_start_time = now
             self.last_rate_check_time = now
             self.rows_written_since_check = 0
-            self.total_rows_written = 0
             self.last_written_timestamp_ns = None
             self.get_logger().info(f"Started recording {episode}.")
 
     def _missing_publishers(self):
         missing = []
-        for spec in self.topic_cfg.values():
-            topic = spec["topic"]
+        for topic in self.topics:
             if self.count_publishers(topic) == 0:
                 missing.append(topic)
         return missing
+
+    def _format_topic(self, topic):
+        return str(topic).format(robot_topic_root=self.robot_topic_root)
 
     def _check_rate(self, now):
         if now - self.record_start_time < self.warn_after:
@@ -225,14 +228,19 @@ class RecorderNode(Node):
                 self.writer.close()
                 self.writer = None
                 if was_recording:
-                    print(colored(f"Stopped during active episode; saved partial data to {path}", "yellow"))
+                    print(
+                        colored(
+                            f"Stopped during active episode; saved partial data to {path}",
+                            "yellow",
+                        )
+                    )
                 else:
                     print(colored(f"Saved {self.episode_count} episode(s) to {path}", "green"))
 
     def _restore_terminal(self):
         if sys.stdin.isatty() and self._tty_settings is not None:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self._tty_settings)
-        print("\033[?25h", end="", flush=True)
+            print("\033[?25h", end="", flush=True)
 
 
 def main(args=None):
