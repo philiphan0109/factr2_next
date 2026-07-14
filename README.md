@@ -1,4 +1,12 @@
-# factr2_next
+# FACTR NEXT: Neural External Torque Estimation
+
+[Steven Oh](https://stevenoh2003.github.io/)*, [Jason Jingzhou Liu](https://jasonjzliu.com/)*, [Tony Tao](https://tony-tao.com/)*, Philip Han, [Kenneth Shaw](https://kennyshaw.net/), [Satoshi Funabashi](https://sites.google.com/site/bashifunabashi/), [Ruslan Salakhutdinov](https://www.cs.cmu.edu/~rsalakhu/), [Deepak Pathak](https://www.cs.cmu.edu/~dpathak/)
+
+Carnegie Mellon University and Waseda University
+
+* Equal contribution
+
+[Project Page](https://jasonjzliu.com/factr2/) | [arXiv](https://arxiv.org/abs/2606.12406)
 
 ## Overview
 
@@ -18,6 +26,7 @@ This repository contains nodes for recording free-motion data, training NEXT mod
 - [Data Recording](#data-recording)
 - [Training](#training)
 - [Inference](#inference)
+- [Adapting NEXT Without ROS](#adapting-next-without-ros)
 - [Optional Piper/Gello Teleop Demo](#optional-pipergello-teleop-demo)
 - [Optional FACTR2 Feedback Demo](#optional-factr2-feedback-demo)
 - [Hardware Notes](#hardware-notes)
@@ -199,6 +208,25 @@ ros2 run factr2_next next_infer
 ```
 
 For bimanual inference, run one inference node per arm with a different `checkpoint_dir`, `robot_topic_root`, and `next_topic_root`. The published raw residual is useful for debugging; the smoothed residual is what the score, contact hysteresis, and optional feedback demos consume.
+
+## Adapting NEXT Without ROS
+
+NEXT does not require ROS. The ROS nodes in this repository provide recording, synchronization, and online transport, but the estimator only needs synchronized histories of joint position, joint velocity, commanded joint position, and measured motor torque.
+
+To adapt NEXT to another stack, preserve the contract `x_t = [joint_pos_t, joint_vel_t, joint_cmd_t - joint_pos_t]`, `y_t = measured_joint_torque_t`, and `tau_ext_hat = tau_measured - tau_free_hat`. Replace the ROS recorder, subscribers, and publishers with your system's native logging and runtime interfaces.
+
+Reusable pieces:
+
+- `training/dataset.py`: H5 windows.
+- `training/models.py`: regressors.
+- `training/train.py`: normalization and checkpoint saving.
+- `inference/checkpoint.py`: checkpoint loading.
+- `inference/history_buffer.py`: runtime input window.
+
+ROS-specific pieces to replace:
+
+- `data_collection/recorder_node.py`
+- `inference/inference_node.py`
 
 ## Optional Piper/Gello Teleop Demo
 
