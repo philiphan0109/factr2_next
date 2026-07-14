@@ -21,7 +21,8 @@ This repository contains nodes for recording free-motion data, training NEXT mod
 - [Optional Piper/Gello Teleop Demo](#optional-pipergello-teleop-demo)
 - [Optional FACTR2 Feedback Demo](#optional-factr2-feedback-demo)
 - [Hardware Notes](#hardware-notes)
-- [License / Citation](#license--citation)
+- [License and Acknowledgements](#license-and-acknowledgements)
+- [Citation](#citation)
 
 ## Repository Layout
 
@@ -284,6 +285,18 @@ This code can command real robot hardware. Before running hardware demos:
 - Confirm `/next/{arm}/external_joint_torque` and `/next/{arm}/contact_state` are stable before enabling feedback.
 - Treat configs in this repository as demo defaults, not universally safe settings for every robot.
 
-## License / Citation
+## License and Acknowledgements
 
-tbd
+This source code is licensed under the Apache 2.0 license found in [LICENSE](LICENSE).
+
+## Citation
+
+If you use this codebase, please cite:
+
+```bibtex
+@article{oh2026factr2,
+  title   = {FACTR 2: Learning Force Sensing and Force-Aware Policies for Any Robot Arm},
+  author  = {Oh, Steven and Liu, Jason Jingzhou and Tao, Tony and Han, Philip and Shaw, Kenneth and Funabashi, Satoshi and Salakhutdinov, Ruslan and Pathak, Deepak},
+  year    = {2026}
+}
+```
