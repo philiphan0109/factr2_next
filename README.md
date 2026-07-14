@@ -50,6 +50,8 @@ uv pip install colcon-core colcon-common-extensions
 uv pip install "numpy<2.0" pyyaml termcolor h5py torch cffi scipy
 ```
 
+Note: PyTorch is installed through `uv` rather than `package.xml` so users can choose the CPU or CUDA wheel appropriate for their machine.
+
 For the optional Piper/Gello hardware demos, also install:
 
 ```bash
