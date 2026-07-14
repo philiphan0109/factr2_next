@@ -61,10 +61,6 @@ shared:
       kp: 2.0
       kd: 0.04315069084
     
-    joint_position_control:
-      kp: 1.03561658022
-      kd: 0.04315069084
-
     factr2_torque_feedback:
       enable: false
       external_joint_torque_topic: "/next/{arm}/external_joint_torque"

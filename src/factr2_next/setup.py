@@ -20,7 +20,7 @@ setup(
     maintainer='philip',
     maintainer_email='philipha@andrew.cmu.edu',
     description='NEXT external joint torque estimation for FACTR2.',
-    license='MIT',
+    license='Apache-2.0',
     extras_require={
         'test': [
             'pytest',

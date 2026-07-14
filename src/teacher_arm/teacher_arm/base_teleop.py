@@ -78,6 +78,11 @@ class BaseTeleopController(Node, ABC):
         self.static_friction_compensation_enable_speed = self.config["shared"]["controller"]["static_friction_dither"]["enable_speed"]
         self.static_friction_compensation_modifier = self.config["shared"]["controller"]["static_friction_dither"]["modifier"]
         self.static_friction_dither_flag = np.ones(self.num_arm_joints, dtype=bool)
+        if self.static_friction_dither_enabled and not self.gravity_compensation_enabled:
+            self.get_logger().warn(
+                "static_friction_dither requires gravity_comp; disabling dither."
+            )
+            self.static_friction_dither_enabled = False
 
         # joint limit repulsion controller
         self.joint_limit_repulsion_kp = self.config["shared"]["controller"]["joint_limit_barrier_repulsion"]["kp"]
@@ -102,11 +107,6 @@ class BaseTeleopController(Node, ABC):
         self.gripper_quantization_lower_threshold = self.config["shared"]["controller"]["gripper_quantization"]["lower_threshold"]
         self.gripper_quantization_upper_threshold = self.config["shared"]["controller"]["gripper_quantization"]["upper_threshold"]
         
-
-        # position control
-        self.joint_position_control_kp = np.array(self.config["shared"]["controller"]["joint_position_control"]["kp"])
-        self.joint_position_control_kd = np.array(self.config["shared"]["controller"]["joint_position_control"]["kd"])
-
 
         ### main set up loop
         self._set_gravity_vector(self.gello_base_orientation)
@@ -390,12 +390,12 @@ class BaseTeleopController(Node, ABC):
         """
         computes joint torques to perform null-space regulation for redundancy resolution of leader arm
         """
-        self.null_space_projector = np.zeros((self.num_arm_joints, self.num_arm_joints))
-        self.null_space_projector[3, 3] = 0.5
-        self.null_space_projector[2, 2] = 0.5
+        null_space_projector = np.zeros((self.num_arm_joints, self.num_arm_joints))
+        null_space_projector[3, 3] = 0.5
+        null_space_projector[2, 2] = 0.5
 
         q_error = curr_arm_joint_pos - self.null_space_regulation_joint_targets[0:self.num_arm_joints]
-        tau_n = self.null_space_projector @ (-(self.null_space_regulation_kp * q_error + self.null_space_regulation_kd* curr_arm_joint_vel))
+        tau_n = null_space_projector @ (-(self.null_space_regulation_kp * q_error + self.null_space_regulation_kd* curr_arm_joint_vel))
         tau_n *= self.null_space_regulation_modifier
         return tau_n
 

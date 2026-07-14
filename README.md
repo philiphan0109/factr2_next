@@ -20,7 +20,6 @@ This repository contains nodes for recording free-motion data, training NEXT mod
 - [Inference](#inference)
 - [Optional Piper/Gello Teleop Demo](#optional-pipergello-teleop-demo)
 - [Optional FACTR2 Feedback Demo](#optional-factr2-feedback-demo)
-- [Config Reference](#config-reference)
 - [Hardware Notes](#hardware-notes)
 - [License / Citation](#license--citation)
 
@@ -225,6 +224,8 @@ ros2 launch system_bringup bimanual_teleop.launch.py
 
 The launch files pass `name: right` or `name: left` into both nodes. Those names select the matching config blocks and produce topics such as `/piper/right/joint_pos_obs`, `/piper/right/joint_pos_cmd`, `/piper/left/joint_pos_obs`, and `/piper/left/joint_pos_cmd`.
 
+This teleop setup is inspired by the low-cost bilateral teleoperation system from the original [FACTR paper](https://arxiv.org/pdf/2502.17432), and includes similar controller features such as gravity compensation, static-friction dither, null-space regulation, joint-limit barriers, and gripper feedback. For the original FACTR teleop implementation, see [JasonJZLiu/FACTR_Teleop](https://github.com/JasonJZLiu/FACTR_Teleop).
+
 ## Optional FACTR2 Feedback Demo
 
 The FACTR2 feedback demo is our Piper/Gello implementation of force feedback from NEXT. It is intentionally optional: the general idea can be adapted to any robot system that can read NEXT torque estimates and command some form of haptic or joint-level feedback.
@@ -272,21 +273,6 @@ Typical workflow:
 ```
 
 For another robot, keep the same structure: estimate `tau_ext` with NEXT, convert it through a robot-specific feedback map, gate it on contact/freshness, clip it to safe limits, and send it to the hardware interface.
-
-## Config Reference
-
-Most workflows only require editing one or two YAML files:
-
-| File | Purpose | Common fields |
-| --- | --- | --- |
-| `src/factr2_next/factr2_next/config/record.yaml` | Record synchronized free-motion H5 data. | `output_dir`, `session_name`, `robot_topic_root`, `recording.target_hz`, `topics` |
-| `src/factr2_next/factr2_next/config/train.yaml` | Train a NEXT model from H5 data. | `train_h5_paths`, `val_h5_paths`, `arm_mode`, `keys`, `history`, `model`, `train.device` |
-| `src/factr2_next/factr2_next/config/inference.yaml` | Run online NEXT inference. | `checkpoint_dir`, `robot_topic_root`, `next_topic_root`, `device`, `smoothing`, `score`, `contact` |
-| `src/factr2_next/factr2_next/config/visualize.yaml` | Start the lightweight web visualizer. | `next_topic_root`, `web.port`, `plot.max_points`, `outputs` |
-| `src/piper_control/piper_control/configs/piper_arm.yaml` | Configure optional Piper hardware nodes. | `can_port`, `gripper_exist`, `home_pos`, `rest_pos`, loop rates |
-| `src/teacher_arm/teacher_arm/configs/piper_gellos.yaml` | Configure optional Gello/Piper teleop and feedback. | Dynamixel `port`, `joint_signs`, teleop limits, `factr2_torque_feedback` |
-
-For single-arm use, prefer namespace roots such as `/piper/right` and `/next/right`. For bimanual use, either run one config per arm or use arm-formatted keys such as `{arm}_joint_pos` when the data is stored in one H5 file.
 
 ## Hardware Notes
 
