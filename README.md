@@ -6,6 +6,8 @@ _Carnegie Mellon University and Waseda University_
 
 [Project Page](https://jasonjzliu.com/factr2/) | [arXiv](https://arxiv.org/abs/2606.12406) | FACTR2 Hardware: TODO
 
+![FACTR NEXT overview](header_figure.png)
+
 ## Overview
 
 `factr2_next` is a ROS2 implementation of Neural External Torque Estimation (NEXT), a data-driven method for estimating external joint torque without dedicated force/torque sensors. NEXT learns the torque required for free-space robot motion from contact-free data, then estimates external torque at runtime as:
