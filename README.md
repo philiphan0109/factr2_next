@@ -4,7 +4,7 @@
 
 _Carnegie Mellon University and Waseda University_
 
-[Project Page](https://jasonjzliu.com/factr2/) | [arXiv](https://arxiv.org/abs/2606.12406)
+[Project Page](https://jasonjzliu.com/factr2/) | [arXiv](https://arxiv.org/abs/2606.12406) | FACTR2 Hardware: TODO
 
 ## Overview
 
@@ -40,7 +40,7 @@ This repository contains nodes for recording free-motion data, training NEXT mod
 
 ## Install
 
-These instructions assume Ubuntu with ROS2 Jazzy installed at `/opt/ros/jazzy`, Python 3.12, and `uv`. This repository is intended to be used as a ROS2 workspace root.
+These instructions assume Ubuntu with ROS2 installed and sourced, Python 3.12, and `uv`. Development and testing were done with ROS2 Jazzy, but the core package uses standard ROS2 Python APIs and may work on other ROS2 distributions.
 
 Create and activate the Python environment:
 
@@ -62,13 +62,15 @@ Note: PyTorch is installed through `uv` rather than `package.xml` so users can c
 For the optional Piper/Gello hardware demos, also install:
 
 ```bash
-uv pip install python-can piper-sdk dynamixel-sdk pyserial pynput
+uv pip install python-can piper-sdk dynamixel-sdk pyserial
 ```
+
+The teacher-arm demo also uses Pinocchio from the ROS environment for inverse dynamics. If `import pinocchio` fails after sourcing ROS, install the matching ROS package, for example `sudo apt install ros-$ROS_DISTRO-pinocchio`.
 
 Build the workspace:
 
 ```bash
-source /opt/ros/jazzy/setup.bash
+source /opt/ros/$ROS_DISTRO/setup.bash
 python -m colcon build --symlink-install
 source install/setup.bash
 ```
@@ -76,7 +78,7 @@ source install/setup.bash
 In each new shell, source the environment before running ROS commands:
 
 ```bash
-source /opt/ros/jazzy/setup.bash
+source /opt/ros/$ROS_DISTRO/setup.bash
 source .venv/bin/activate
 source install/setup.bash
 ```
@@ -86,11 +88,13 @@ source install/setup.bash
 After building and sourcing the workspace, check that the package and console scripts are visible:
 
 ```bash
-ros2 pkg list | grep factr2_next
-ros2 run factr2_next next_record --help
+ros2 pkg list | grep -E "factr2_next|piper_control|teacher_arm|system_bringup"
+ros2 pkg executables factr2_next
 ros2 run factr2_next next_train --help
-ros2 run factr2_next next_infer --help
+python -c "import torch, h5py, yaml, numpy, rclpy; print('core deps ok')"
 ```
+
+`next_record`, `next_infer`, and `next_visualize` are runtime nodes. They require live topics, a valid checkpoint, or an open web port, so run them after configuring the corresponding YAML files.
 
 ## Data Recording
 
