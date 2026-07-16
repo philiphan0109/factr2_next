@@ -1,0 +1,46 @@
+data:
+  train_h5_paths:
+    - /path/to/glorbot2_bimanual_free_motion_train.h5
+  val_h5_paths:
+    - /path/to/glorbot2_bimanual_free_motion_val.h5
+
+  train_episodes: all
+  val_episodes: all
+
+  # Bimanual H5 files train one NEXT model per arm.
+  arm_mode: both
+  arms: [left, right]
+  keys:
+    joint_pos: "{arm}_joint_pos"
+    joint_vel: "{arm}_joint_vel"
+    joint_cmd: "{arm}_joint_cmd"
+    measured_joint_torque: "{arm}_measured_joint_torque"
+  history: 80
+
+  # Used only when val_h5_paths is empty.
+  val_fraction: 0.1
+  val_split: contiguous
+  val_buffer_windows: 80
+
+model:
+  type: lstm
+  hidden_size: 128
+  num_layers: 2
+  bidirectional: true
+  head_hidden: 256
+  head_layers: 2
+  dropout: 0.1
+
+train:
+  batch_size: 2048
+  epochs: 20
+  learning_rate: 0.001
+  device: cpu
+  seed: 0
+
+save:
+  output_dir: runs
+  run_name: next_glorbot2_free_torque
+
+next:
+  sign_convention: measured_minus_predicted

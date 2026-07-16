@@ -1,0 +1,22 @@
+# Right-arm visualizer. Use visualize_glorbot2_left.yaml for the left arm.
+next_topic_root: /next/glorbot2_1/nero_right
+feedback_topic_root: /factr2_feedback/glorbot2_1/nero_right
+
+web:
+  host: 127.0.0.1
+  port: 8080
+
+plot:
+  max_points: 500
+  joint_count: 7
+
+outputs:
+  external_joint_torque: "{next_topic_root}/external_joint_torque"
+  external_joint_torque_raw: "{next_topic_root}/external_joint_torque/raw"
+  free_joint_torque_pred: "{next_topic_root}/free_joint_torque_pred"
+  mse: "{next_topic_root}/mse"
+  score: "{next_topic_root}/score"
+  contact_state: "{next_topic_root}/contact_state"
+
+  feedback_torque: "{feedback_topic_root}/torque"
+  feedback_gate: "{feedback_topic_root}/gate"

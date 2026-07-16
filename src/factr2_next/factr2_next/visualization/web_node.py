@@ -36,6 +36,12 @@ canvas{display:block;width:100%;height:580px}.controls{display:grid;grid-templat
 const canvas=document.getElementById("plot"), ctx=canvas.getContext("2d");
 const controls=document.getElementById("controls"), statusEl=document.getElementById("status");
 let data={t:[]}, controlsReady=false;
+const JOINT_COUNT=__JOINT_COUNT__;
+function jointItems(prefix,labelSuffix,colors){
+  return Array.from({length:JOINT_COUNT},(_,i)=>[
+    `${prefix}_j${i+1}`, `j${i+1}${labelSuffix}`, colors[i%colors.length], false
+  ]);
+}
 const groups=[
   ["Summary",[
     ["ext_norm","|tau ext| filtered","#ff5a63",true],
@@ -47,18 +53,9 @@ const groups=[
     ["score","score","#6ee787",true],
     ["contact","contact","#d2a8ff",true],
   ]],
-  ["Filtered joints",[
-    ["ext_j1","j1","#ff6b6b",false],["ext_j2","j2","#ffa94d",false],["ext_j3","j3","#ffd43b",false],
-    ["ext_j4","j4","#69db7c",false],["ext_j5","j5","#4dabf7",false],["ext_j6","j6","#b197fc",false],
-  ]],
-  ["Raw joints",[
-    ["raw_j1","j1 raw","#ff8787",false],["raw_j2","j2 raw","#ffc078",false],["raw_j3","j3 raw","#ffe066",false],
-    ["raw_j4","j4 raw","#8ce99a",false],["raw_j5","j5 raw","#74c0fc",false],["raw_j6","j6 raw","#c4b5fd",false],
-  ]],
-  ["Feedback output",[
-    ["fb_j1","j1 fb","#7dd3fc",false],["fb_j2","j2 fb","#67e8f9",false],["fb_j3","j3 fb","#5eead4",false],
-    ["fb_j4","j4 fb","#86efac",false],["fb_j5","j5 fb","#fde047",false],["fb_j6","j6 fb","#f0abfc",false],
-  ]],
+  ["Filtered joints",jointItems("ext","",["#ff6b6b","#ffa94d","#ffd43b","#69db7c","#4dabf7","#b197fc","#f783ac"])],
+  ["Raw joints",jointItems("raw"," raw",["#ff8787","#ffc078","#ffe066","#8ce99a","#74c0fc","#c4b5fd","#faa2c1"])],
+  ["Feedback output",jointItems("fb"," fb",["#7dd3fc","#67e8f9","#5eead4","#86efac","#fde047","#f0abfc","#f9a8d4"])],
 ];
 const series=groups.flatMap(g=>g[1]).map(s=>({key:s[0],label:s[1],color:s[2],visible:loadVisible(s[0],s[3])}));
 function loadVisible(key, fallback){const v=localStorage.getItem("next."+key); return v===null?fallback:v==="1"}
@@ -115,26 +112,29 @@ setupControls(); draw();
 """
 
 
-JOINT_COUNT = 6
-PLOT_KEYS = (
-    "t",
-    "ext_norm",
-    "ext_raw_norm",
-    "fb_norm",
-    "fb_gate",
-    "free_norm",
-    "mse",
-    "score",
-    "contact",
-    *(f"ext_j{i}" for i in range(1, JOINT_COUNT + 1)),
-    *(f"raw_j{i}" for i in range(1, JOINT_COUNT + 1)),
-    *(f"fb_j{i}" for i in range(1, JOINT_COUNT + 1)),
-)
+DEFAULT_JOINT_COUNT = 6
 TORQUE_KEYS = {
     "ext": ("ext_norm", "ext"),
     "raw": ("ext_raw_norm", "raw"),
     "fb": ("fb_norm", "fb"),
 }
+
+
+def plot_keys(joint_count):
+    return (
+        "t",
+        "ext_norm",
+        "ext_raw_norm",
+        "fb_norm",
+        "fb_gate",
+        "free_norm",
+        "mse",
+        "score",
+        "contact",
+        *(f"ext_j{i}" for i in range(1, joint_count + 1)),
+        *(f"raw_j{i}" for i in range(1, joint_count + 1)),
+        *(f"fb_j{i}" for i in range(1, joint_count + 1)),
+    )
 
 
 class WebNode(Node):
@@ -145,7 +145,9 @@ class WebNode(Node):
         self.next_topic_root = str(self.cfg.get("next_topic_root", "/next"))
         self.feedback_topic_root = str(self.cfg.get("feedback_topic_root", "/factr2_feedback"))
         self.max_points = int(self.cfg.get("plot", {}).get("max_points", 500))
-        self.keys = PLOT_KEYS
+        self.joint_count = int(self.cfg.get("plot", {}).get("joint_count", DEFAULT_JOINT_COUNT))
+        self.html = HTML.replace("__JOINT_COUNT__", str(self.joint_count))
+        self.keys = plot_keys(self.joint_count)
         self.data = {key: deque(maxlen=self.max_points) for key in self.keys}
         self.latest = {key: np.nan for key in self.keys if key != "t"}
         self.t0, self.seq, self.running = time.monotonic(), 0, True
@@ -234,7 +236,7 @@ class WebNode(Node):
         values = np.asarray(values, dtype=float)
         norm_key, joint_prefix = TORQUE_KEYS[prefix]
         self.latest[norm_key] = float(np.linalg.norm(values))
-        for i in range(JOINT_COUNT):
+        for i in range(self.joint_count):
             self.latest[f"{joint_prefix}_j{i + 1}"] = (
                 float(values[i]) if i < len(values) else np.nan
             )
@@ -274,7 +276,7 @@ class WebNode(Node):
                 if self.path == "/events":
                     self._events()
                     return
-                body = HTML.encode()
+                body = node.html.encode()
                 self.send_response(200)
                 self.send_header("content-type", "text/html")
                 self.send_header("content-length", str(len(body)))
