@@ -4,10 +4,12 @@ This branch keeps `factr2_next` robot-agnostic. Glorbot2 support comes from a sm
 
 ## Adapter Contract
 
-Run one adapter node per arm. Each adapter subscribes to the native Glorbot2 topics:
+Run one adapter node per arm. Each adapter subscribes to the native Glorbot2 arm and torso topics:
 
 - `/glorbot2/{robot_name}/nero_{arm}/joint_state`
 - `/glorbot2/{robot_name}/nero_{arm}/joint_state_cmd`
+- `/glorbot2/{robot_name}/torso/joint_state`
+- `/glorbot2/{robot_name}/torso/joint_state_cmd`
 
 and publish:
 
@@ -20,12 +22,12 @@ All four adapter outputs should be `sensor_msgs/JointState`, with the numeric ve
 
 ## Expected Mapping
 
-- `joint_pos_obs.position = latest joint_state.position`
-- `joint_vel_obs.position = latest joint_state.velocity`
+- `joint_pos_obs.position = [7 arm positions, torso position]`
+- `joint_vel_obs.position = [7 arm velocities, torso velocity]`
 - `joint_effort_obs.position = latest joint_state.effort`
-- `joint_pos_cmd.position = latest joint_state_cmd.target.position`
+- `joint_pos_cmd.position = [7 arm commands, torso command]`
 
-Publish the four adapter messages from one timer using the same ROS timestamp. Wait until both a state message and a command message have arrived before publishing.
+Publish the four adapter messages from one timer using the same ROS timestamp. Wait for arm and torso state and command messages before publishing. The model therefore receives 24 features per timestep while predicting only the 7 arm torques; torso torque is neither predicted nor fed back.
 
 Example bimanual startup:
 
@@ -75,7 +77,8 @@ ros2 run factr2_next next_visualize --ros-args \
 
 ## Postconditions
 
-- Adapter topics publish 7-DoF vectors in `JointState.position` for both arms.
+- Adapter position, velocity, and command topics publish 8 values ordered `[7 arm joints, torso]`.
+- Adapter effort topics publish 7 measured arm torques; torso torque is not a target.
 - `next_record` writes H5 episodes with `left_*` and `right_*` keys for position, velocity, command, and measured torque.
 - `next_train` creates separate left and right NEXT checkpoints from the bimanual H5.
 - `next_infer` publishes `/next/glorbot2_1/nero_{arm}/external_joint_torque`, `/raw`, `free_joint_torque_pred`, `mse`, `score`, and `contact_state`.

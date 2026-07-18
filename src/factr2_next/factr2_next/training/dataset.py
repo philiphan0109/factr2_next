@@ -56,6 +56,13 @@ class NextTorqueDataset(Dataset):
         vel = self._read(episode, "joint_vel")
         cmd = self._read(episode, "joint_cmd")
         torque = self._read(episode, "measured_joint_torque")
+        widths = {
+            "position": pos.shape[1],
+            "velocity": vel.shape[1],
+            "command": cmd.shape[1],
+        }
+        if len(set(widths.values())) != 1:
+            raise ValueError(f"NEXT input widths must match: {widths}")
         n = min(len(pos), len(vel), len(cmd), len(torque))
         # Paper Sec. 4, Eq. (3): x_i = [q, qdot, q_cmd - q] over history.
         x_step = np.concatenate([pos[:n], vel[:n], cmd[:n] - pos[:n]], axis=1)

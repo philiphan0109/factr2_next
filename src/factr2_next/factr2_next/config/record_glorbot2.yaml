@@ -12,6 +12,8 @@ recording:
   warn_after_seconds: 2.0
 
 # Published by two Glorbot2 NEXT adapter nodes, one per arm.
+# Position, velocity, and command contain [7 arm joints, torso].
+# Measured torque contains only the 7 arm joints.
 topics:
   left_joint_pos:
     topic: /next_adapter/glorbot2_1/nero_left/joint_pos_obs

@@ -127,6 +127,16 @@ class InferenceNode(Node):
         joint_pos, joint_vel, joint_cmd, measured = [
             self._extract(msg, key) for msg, key in zip(msgs, INPUT_KEYS)
         ]
+        if 3 * joint_pos.size != self.loaded.input_size:
+            raise ValueError(
+                f"Checkpoint expects {self.loaded.input_size} input features, "
+                f"but received {joint_pos.size} joints x 3."
+            )
+        if measured.size != self.loaded.output_size:
+            raise ValueError(
+                f"Checkpoint predicts {self.loaded.output_size} torques, "
+                f"but received {measured.size}."
+            )
 
         self.buffer.append(joint_pos, joint_vel, joint_cmd)
         # Paper Sec. 4, Eq. (3): f_theta consumes a full history window.

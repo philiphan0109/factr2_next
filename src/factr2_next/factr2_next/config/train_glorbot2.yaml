@@ -7,7 +7,8 @@ data:
   train_episodes: all
   val_episodes: all
 
-  # Bimanual H5 files train one NEXT model per arm.
+  # Each model maps [7 arm joints, torso] histories to 7 arm torques.
+  # Bimanual H5 files train one independent NEXT model per arm.
   arm_mode: both
   arms: [left, right]
   keys:

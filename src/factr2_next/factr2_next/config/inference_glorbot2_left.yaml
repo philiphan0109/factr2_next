@@ -2,7 +2,8 @@
 #   model.pt, config.yaml, normalization.npz
 checkpoint_dir: /path/to/glorbot2_left_next_run_dir
 
-# Left-arm input topics come from the Glorbot2 NEXT adapter.
+# Left-arm inputs contain [7 arm joints, torso]; outputs contain 7 arm torques.
+# Topics come from the Glorbot2 NEXT adapter.
 robot_topic_root: /next_adapter/glorbot2_1/nero_left
 next_topic_root: /next/glorbot2_1/nero_left
 
