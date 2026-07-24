@@ -1,0 +1,33 @@
+robot_name: glorbot2_1
+arm: right
+output_dir: data/eval
+session_name: contact_pushes
+checkpoint_path: ""
+
+sync:
+  queue_size: 20
+  slop_seconds: 0.03
+
+recording:
+  target_hz: 60.0
+  min_hz: 50.0
+  aux_timeout_seconds: 0.1
+  warn_after_seconds: 2.0
+
+topics:
+  joint_pos: /next_adapter/{robot_name}/nero_{arm}/joint_pos_obs
+  joint_vel: /next_adapter/{robot_name}/nero_{arm}/joint_vel_obs
+  joint_cmd: /next_adapter/{robot_name}/nero_{arm}/joint_pos_cmd
+  measured_joint_torque: /next_adapter/{robot_name}/nero_{arm}/joint_effort_obs
+  free_joint_torque_pred: /next/{robot_name}/nero_{arm}/free_joint_torque_pred
+  external_joint_torque_raw: /next/{robot_name}/nero_{arm}/external_joint_torque/raw
+  external_joint_torque_filtered: /next/{robot_name}/nero_{arm}/external_joint_torque
+  score: /next/{robot_name}/nero_{arm}/score
+  contact_state: /next/{robot_name}/nero_{arm}/contact_state
+  feedback_torque: /factr2_feedback/{robot_name}/nero_{arm}/torque
+  feedback_gate: /factr2_feedback/{robot_name}/nero_{arm}/gate
+
+plot:
+  online_ema_alpha: 0.2
+  contact_low_threshold: 1.0
+  contact_high_threshold: 1.5

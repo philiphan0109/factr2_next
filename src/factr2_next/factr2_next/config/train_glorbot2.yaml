@@ -1,8 +1,8 @@
 data:
   train_h5_paths:
-    - /path/to/glorbot2_bimanual_free_motion_train.h5
+    - /home/laptop/Projects/glorbot2/factr2_next/data/train_corpus_1.h5
   val_h5_paths:
-    - /path/to/glorbot2_bimanual_free_motion_val.h5
+    - /home/laptop/Projects/glorbot2/factr2_next/data/validation_corpus_1.h5
 
   train_episodes: all
   val_episodes: all
@@ -36,7 +36,7 @@ train:
   batch_size: 2048
   epochs: 20
   learning_rate: 0.001
-  device: cpu
+  device: cuda
   seed: 0
 
 save:

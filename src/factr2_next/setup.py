@@ -29,9 +29,12 @@ setup(
     entry_points={
         'console_scripts': [
             'next_record = factr2_next.data_collection.recorder_node:main',
+            'next_check_h5 = factr2_next.data_collection.check_h5:main',
             'next_train = factr2_next.training.train:main',
             'next_infer = factr2_next.inference.inference_node:main',
             'next_visualize = factr2_next.visualization.web_node:main',
+            'next_eval_record = factr2_next.evaluation.recorder_node:main',
+            'next_eval_plot = factr2_next.evaluation.plot_episode:main',
         ],
     },
 )

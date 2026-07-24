@@ -139,6 +139,29 @@ topics:
 
 The important rule is that the H5 keys you record must match the `keys` section in `train.yaml`.
 
+## Evaluation push recordings
+
+Record one configured Glorbot2 arm at 60 Hz (edit `eval_glorbot2.yaml` to select
+`left` or `right`):
+
+```bash
+ros2 run factr2_next next_eval_record
+```
+
+Press `r` to start a push episode and `r` again to stop and flush it. Multiple
+episodes are stored in the same file. Check and plot a recording with:
+
+```bash
+ros2 run factr2_next next_check_h5 data/eval/contact_pushes_TIMESTAMP.h5
+ros2 run factr2_next next_eval_plot data/eval/contact_pushes_TIMESTAMP.h5 \
+  --episode ep_0000 --output figures/contact_push.png
+```
+
+The figure contains one line: the signed sum of all seven online-filtered
+external joint torques. Use `--ema-alpha 0.15` to filter the recorded raw signal,
+`--window 1.0 5.0` to crop time, or `--ylim -4 4` for a fixed comparison scale.
+Recorded signals are never modified.
+
 ## Training
 
 NEXT is trained on free-motion data. In the paper notation, the model learns the free-space torque term `tau_free_hat`; at runtime, external torque is the residual:

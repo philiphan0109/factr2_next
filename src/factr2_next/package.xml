@@ -16,6 +16,7 @@
   <depend>ament_index_python</depend>
 
   <exec_depend>python3-h5py</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-termcolor</exec_depend>
   <exec_depend>python3-yaml</exec_depend>

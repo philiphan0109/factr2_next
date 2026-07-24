@@ -11,7 +11,7 @@ SCHEMA = "factr2_next_h5_v1"
 class H5Writer:
     """Tiny writer for the public NEXT free-motion H5 schema."""
 
-    def __init__(self, path, session_name, keys):
+    def __init__(self, path, session_name, keys, metadata=None):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.keys = list(keys)
@@ -19,6 +19,8 @@ class H5Writer:
         self.file.attrs["schema"] = SCHEMA
         self.file.attrs["session_name"] = str(session_name)
         self.file.attrs["created_at"] = datetime.now(timezone.utc).isoformat()
+        for key, value in (metadata or {}).items():
+            self.file.attrs[str(key)] = value
         self.episode_index = -1
         self.episode = None
 

@@ -7,7 +7,7 @@ web:
   port: 8080
 
 plot:
-  max_points: 500
+  max_points: 100
   joint_count: 7
 
 outputs:

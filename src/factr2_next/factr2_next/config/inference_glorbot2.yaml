@@ -1,13 +1,13 @@
 # Directory created by next_train. It must contain:
 #   model.pt, config.yaml, normalization.npz
-checkpoint_dir: /path/to/glorbot2_next_run_dir
+checkpoint_dir: /home/laptop/Projects/glorbot2/factr2_next/runs/next_glorbot2_free_torque_right_20260724_165050
 
 # Right-arm inputs contain [7 arm joints, torso]; outputs contain 7 arm torques.
 # Topics come from the Glorbot2 NEXT adapter.
 robot_topic_root: /next_adapter/glorbot2_1/nero_right
 next_topic_root: /next/glorbot2_1/nero_right
 
-device: cpu
+device: cuda
 
 sync:
   queue_size: 20
@@ -57,7 +57,7 @@ score:
 contact:
   enabled: true
   low_threshold: 1.0
-  high_threshold: 2.0
+  high_threshold: 1.5
 
 next:
   sign_convention: measured_minus_predicted
