@@ -294,7 +294,7 @@ tau_fb      = gate * gains * tau_ext - damping_gains * qdot_teacher
 tau_fb      = clip(tau_fb, -max_torque, max_torque)
 ```
 
-The gates matter. Feedback only turns on when NEXT reports contact, recent torque/contact messages are still fresh, and the ramp filter has moved the gate toward one. This avoids instantly applying stale or discontinuous feedback.
+For a safer and more robust user experience, this optional implementation applies contact with a ramp filter. Feedback is enabled only when NEXT detects contact. This prevents stale estimates or discontinuous torque commands from being applied abruptly. These gating and filtering safeguards are implementation features of the optional demo and were not used in the experiments reported in the FACTR2 paper.
 
 Enable the demo in `src/teacher_arm/teacher_arm/configs/piper_gellos.yaml`:
 
@@ -310,7 +310,7 @@ factr2_torque_feedback:
 
 The gains are hardware- and sign-convention-dependent. Start small, verify the sign of each joint one at a time, and keep conservative `max_torque` limits until the feedback direction and magnitude are stable.
 
-`damping_gains` is included as a tuning hook, but defaults to zero because this demo primarily used gated proportional feedback from the estimated external torque.
+`damping_gains` is included as a tuning hook, but defaults to zero because this demo primarily used proportional feedback from the estimated external torque.
 
 Typical workflow:
 
