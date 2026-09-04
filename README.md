@@ -4,7 +4,7 @@
 
 _Carnegie Mellon University and Waseda University_
 
-[Project Page](https://jasonjzliu.com/factr2/) | [arXiv](https://arxiv.org/abs/2606.12406) | FACTR2 Hardware: Coming soon
+[Project Page](https://jasonjzliu.com/factr2/) | [arXiv](https://arxiv.org/abs/2606.12406)
 
 <p align="center">
   <img src="assets/header_figure.png" alt="FACTR NEXT overview" width="900">
